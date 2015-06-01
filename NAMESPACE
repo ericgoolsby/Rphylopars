@@ -1,0 +1,37 @@
+useDynLib(Rphylopars)
+import(ape)
+importFrom(Rcpp, evalCpp)
+importFrom(doBy, summaryBy)
+importFrom(geiger, name.check)
+importFrom(phytools, pbtree, sim.corrs, fastBM,splitTree,paste.tree,sampleFrom)
+importFrom(phylolm,three.point.compute,transf.branch.lengths,pruningwise.branching.times,pruningwise.distFromRoot)
+importFrom(mvnmle,mlest)
+export(
+anova.phylopars.lm,
+logLik.phylopars,
+logLik.phylopars.lm,
+phylopars,
+phylopars.crossvalidate,
+phylopars.lm,
+phylopars.pca,
+phylopars.predict,
+phylopars.rerun,
+plot.crossvalidate,
+print.crossvalidate,
+print.phylopars,
+print.phylopars.lm,
+simtraits,
+summary.phylopars,
+summary.phylopars.lm,
+write.phylopars
+)
+
+S3method(anova, phylopars.lm)
+S3method(logLik, phylopars)
+S3method(logLik, phylopars.lm)
+S3method(plot, crossvalidate)
+S3method(print, crossvalidate)
+S3method(print, phylopars)
+S3method(print, phylopars.lm)
+S3method(summary, phylopars)
+S3method(summary, phylopars.lm)
