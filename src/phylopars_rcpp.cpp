@@ -245,7 +245,7 @@ arma::mat convert_pars(arma::vec theta,arma::vec options,double T=1)
 }
 
 // [[Rcpp::export]]
-double threepoint(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,int Tmax,int Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
+double threepoint(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,double Tmax,double Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
 {
   // options
   // 0 = correlated
@@ -795,7 +795,7 @@ double threepoint_nopheno(arma::vec theta,arma::vec options,arma::vec y,arma::ve
 }
 
 // [[Rcpp::export]]
-double threepoint_phenocorr(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,int Tmax,int Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
+double threepoint_phenocorr(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,double Tmax,double Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
 {
   // edgevec is a vector of tip lengths
   // subset_list is a list of unique matrices to invert once
@@ -1068,7 +1068,7 @@ if((unsigned int)(npars)==theta.size())
 }
 
 // [[Rcpp::export]]
-double threepoint_calc_pheno(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,List phenocovs,List inv_phenocovs,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,int Tmax,int Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
+double threepoint_calc_pheno(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,List phenocovs,List inv_phenocovs,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,double Tmax,double Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
 {
   // edgevec is a vector of tip lengths
   // subset_list is a list of unique matrices to invert once
@@ -1335,7 +1335,7 @@ double threepoint_calc_pheno(arma::vec theta,arma::vec options,arma::vec y,arma:
 }
 
 // [[Rcpp::export]]
-arma::mat threepoint_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,int Tmax,int Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
+arma::mat threepoint_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,double Tmax,double Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
 {
   // options
   // 0 = correlated
@@ -1537,7 +1537,7 @@ arma::mat threepoint_predict(arma::vec theta,arma::vec options,arma::vec y,arma:
 }
 
 // [[Rcpp::export]]
-arma::mat threepoint_nopheno_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,arma::vec edgevec,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,int Tmax,int Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
+arma::mat threepoint_nopheno_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,arma::vec edgevec,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,double Tmax,double Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
 {
   // edgevec is a vector of tip lengths
   // subset_list is a list of unique matrices to invert once
@@ -1786,7 +1786,7 @@ arma::mat threepoint_nopheno_predict(arma::vec theta,arma::vec options,arma::vec
 }
 
 // [[Rcpp::export]]
-arma::mat threepoint_phenocorr_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,int Tmax,int Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
+arma::mat threepoint_phenocorr_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,double Tmax,double Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
 {
   // edgevec is a vector of tip lengths
   // subset_list is a list of unique matrices to invert once
@@ -2010,7 +2010,7 @@ arma::mat threepoint_phenocorr_predict(arma::vec theta,arma::vec options,arma::v
 }
 
 // [[Rcpp::export]]
-arma::mat threepoint_calc_pheno_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,List phenocovs,List inv_phenocovs,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,int Tmax,int Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
+arma::mat threepoint_calc_pheno_predict(arma::vec theta,arma::vec options,arma::vec y,arma::vec ku,arma::vec iu,arma::mat edge,arma::vec edgelength,Rcpp::List uchildren_list,List subset_list,List species_subset,arma::vec tip_combn,arma::vec ymin,arma::vec ymax,List phenocovs,List inv_phenocovs,arma::vec non_optim_transform,arma::vec models,arma::uvec externalEdge,arma::uvec not_externalEdge,arma::vec dist_anc,arma::vec dist_des,double Tmax,double Tmin,int nmodels,arma::vec lower_bounds,arma::vec upper_bounds,arma::vec OU_D,arma::vec times)
 {
   // edgevec is a vector of tip lengths
   // subset_list is a list of unique matrices to invert once
