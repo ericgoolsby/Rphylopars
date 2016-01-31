@@ -1,33 +1,78 @@
+convert_to_means <- function(df,index_col = 1,sort_vec,FUN = function(X) mean(X,na.rm=TRUE))
+{
+  ret <- matrix(NA,ncol = ncol(df)-1,nrow = length(unique(df[,index_col])))
+  index <- df[,index_col]
+  col_counter <- 1
+  cols <- colnames(df)[-index_col]
+  for(i in (1:ncol(df))[-index_col])
+  {
+    ret[,col_counter] <- sapply(split(df[,i],index),FUN = FUN)
+    col_counter <- col_counter + 1
+  }
+  rownames(ret) <- names(split(df[,i],index))
+  colnames(ret) <- cols
+  if(missing(sort_vec)) return(ret) else return(ret[sort_vec,,drop=F])
+}
+
+optim2 <- function(args)
+{
+  names(args)[1] <- "theta"
+  f <- function(theta,args)
+  {
+    AB <- Rphylopars:::convert_pars2(theta,args$options,args$fixed_phylocov,args$fixed_phenocov,check1=0)
+    A <- AB[1:args$options["nvar"],1:args$options["nvar"]]
+    B <- AB[1:args$options["nvar"]+args$options["nvar"],1:args$options["nvar"]]
+    if(args$options["pheno_error"] > 0)
+    {
+      tr <- try(as.matrix(nearPD(B,corr = FALSE,keepDiag = FALSE)$mat),silent=TRUE)
+      B <- if(class(tr)=="try-error") B else tr
+    }
+    tr <- try(as.matrix(nearPD(A,corr = FALSE,keepDiag = FALSE)$mat),silent=TRUE)
+    A <- if(class(tr)=="try-error") A else tr
+    args[[1]] <- Rphylopars:::depost(A,B,options=args$options)
+    do.call(args[[2]],args[-2])
+  }
+  optim_args <- args
+  names(optim_args)[[1]] <- "par"
+  do.call(optim,optim_args)
+}
+
 optim_BFGS_NM <- function(args,optim_limit=50)
 {
-  abs_tol <- 1e-3
+  abs_tol <- 1e-1
   args_BFGS <- c(args,list(method="BFGS"))#,control=list(ndeps=rep(sqrt(.Machine$double.eps),length(args$par)),maxit=length(args$par)*200,abstol=1e-5)))
-  o <- try(suppressWarnings(do.call(optim,args_BFGS)),silent=TRUE)
+  #o <- try(suppressWarnings(do.call(optim,args_BFGS)),silent=TRUE)
+  o <- try(suppressWarnings(optim2(args_BFGS)),silent=TRUE)
   if(class(o)!="try-error")
   {
     args$par <- o$par
   } else
   {
-    o <- suppressWarnings(do.call(optim,args))
+    #o <- suppressWarnings(do.call(optim,args))
+    o <- try(suppressWarnings(optim2(args)),silent=TRUE)
     args$par <- o$par
   }
-  o2 <- suppressWarnings(do.call(optim,args))
+  #o2 <- suppressWarnings(do.call(optim,args))
+  o2 <- try(suppressWarnings(optim2(args)),silent=TRUE)
   counter <- 1
   while(abs(o$value-o2$value)>abs_tol & counter<optim_limit)
   {
     counter <- counter+1
     args_BFGS$par <- o2$par
-    o <- try(suppressWarnings(do.call(optim,args_BFGS)),silent=TRUE)
+    #o <- try(suppressWarnings(do.call(optim,args_BFGS)),silent=TRUE)
+    o <- try(suppressWarnings(optim2(args_BFGS)),silent=TRUE)
     if(class(o)!="try-error")
     {
       args$par <- o$par
     } else
     {
-      o <- suppressWarnings(do.call(optim,args))
+      #o <- suppressWarnings(do.call(optim,args))
+      o <- try(suppressWarnings(optim2(args)),silent=TRUE)
       args$par <- o$par        
     }
     if(abs(o$value-o2$value)<=abs_tol) return(o)
-    o2 <- suppressWarnings(do.call(optim,args))
+    #o2 <- suppressWarnings(do.call(optim,args))
+    o2 <- try(suppressWarnings(optim2(args)),silent=TRUE)
   }
   if(abs(o$value-o2$value)>abs_tol)
   {
@@ -163,7 +208,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error=TRUE,phylo_correlat
   lower_bounds <- bounds.default[as.logical(models),1]
   upper_bounds <- bounds.default[as.logical(models),2]
   nmodels <- length(which(models==1))
-  model_args <- list(lower_bounds=lower_bounds,upper_bounds=upper_bounds,models=models,externalEdge=externalEdge,not_externalEdge=not_externalEdge,dist_anc=dist_anc,dist_des=dist_des,Tmax=Tmax,Tmin=Tmin,non_optim_transform=starting.values.default[as.logical(models)],nmodels=nmodels,OU_D=OU_D,times=times)
+  model_args <- list(lower_bounds=lower_bounds,upper_bounds=upper_bounds,models=models,externalEdge=externalEdge,not_externalEdge=not_externalEdge,dist_anc=dist_anc,dist_des=dist_des,Tmax=Tmax,Tmin=Tmin,nmodels=nmodels,OU_D=OU_D,times=times)
   
   clip <- FALSE
   colnames(trait_data)[which(colnames(trait_data)==species_identifier)] <- "species"
@@ -186,7 +231,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error=TRUE,phylo_correlat
   
   trait_data$species <- factor(trait_data$species, levels=tree$tip.label)
   taxa <- tree$tip.label
-  ns <- apply(trait_data[,1:nvar+1,drop=F],2,function(X) tapply(X,trait_data$species,function(X) length(which(!is.na(X)))))
+  ns <- convert_to_means(trait_data,index_col = 1,sort_vec = tree$tip.label,FUN = function(X) length(which(!is.na(X))))
   if(max(ns,na.rm=TRUE)==1)
   {
     if(missing(pheno_error)) pheno_error <- FALSE
@@ -210,9 +255,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error=TRUE,phylo_correlat
   trait_data[,1:nvar+1] <- apply(trait_data[,1:nvar+1,drop=F],2,as.double)
   if(!pheno_error)
   {
-    rawX <- apply(trait_data[,2:ncol(trait_data),drop=FALSE],2,function(X) tapply(X,trait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
+    rawX <- convert_to_means(trait_data,1,sort_vec = tree$tip.label,FUN = function(X) mean(X,na.rm=TRUE))
     trait_data <- data.frame(species=rownames(rawX),rawX)
-    trait_data <- trait_data[taxa,]
   }
   
   means <- apply(trait_data[,2:ncol(trait_data),drop=FALSE],2,function(X) mean(X,na.rm=TRUE))
@@ -232,11 +276,10 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error=TRUE,phylo_correlat
     offsets <- rep(0.0,nvar)
     norms <- rep(1.0,nvar)
   }
-  X <- apply(ztrait_data[,2:ncol(ztrait_data),drop=FALSE],2,function(X) tapply(X,ztrait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
-  Xtrait_data <- apply(trait_data[,2:ncol(trait_data),drop=FALSE],2,function(X) tapply(X,trait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
-  vars <- apply(trait_data[,1:nvar+1,drop=FALSE],2,function(X) tapply(X,trait_data$species,function(X) var(X,na.rm=TRUE)))
+  X <- phylocurve:::convert_to_means(ztrait_data,1,tree$tip.label)
+  Xtrait_data <- phylocurve:::convert_to_means(trait_data,1,tree$tip.label)
+  vars <- phylocurve:::convert_to_means(trait_data,1,tree$tip.label,function(X) var(X,na.rm=TRUE))
   vars[vars==0] <- 1e-6
-  ns <- apply(trait_data[,1:nvar+1,drop=FALSE],2,function(X) tapply(X,trait_data$species,function(X) length(which(!is.na(X)))))
   pooled <- colSums((ns-1)*vars/apply(ns,2,function(X) sum(X[X>1 & !is.na(X)])-length(X[X>1 & !is.na(X)])),na.rm=TRUE)
   if(missing(phenocov_start) & all(!is.na(pooled))) 
   {
@@ -421,7 +464,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error=TRUE,phylo_correlat
   }
   if(use_means)
   {
-    mean_data <- apply(trait_data[,2:ncol(trait_data),drop=FALSE],2,function(X) tapply(X,trait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
+    mean_data <- convert_to_means(trait_data,1,tree$tip.label)
     mean_data <- data.frame(species=rownames(mean_data),mean_data)
     f_args[["use_means"]] <- FALSE
     f_args[["trait_data"]] <- mean_data
@@ -518,6 +561,7 @@ sample_sd <- function(x)
   (sqrt(var(x)*(length(x)-1)/length(x)))
 }
 
+##### converts covariance matrices to a vector for unconstrained optimization
 get_starting_pars <- function(A,B,options)
 {
   pheno_error <- as.logical(options["pheno_error"])
@@ -525,7 +569,7 @@ get_starting_pars <- function(A,B,options)
   pheno_correlated <- options["pheno_error"] == 2
   calc_pheno <- options["pheno_error"] == 3
   nvar <- options["nvar"]
-  if(pheno_error)
+  if(pheno_error & FALSE)
   {
     phylogeneticfraction <- .5
   } else
@@ -533,7 +577,11 @@ get_starting_pars <- function(A,B,options)
     phylogeneticfraction <- 1
   }
   A <- A*phylogeneticfraction
-  B <- B*(1-phylogeneticfraction)
+  if(pheno_error) B <- B#*(1-phylogeneticfraction)
+  diag(A) <- abs(diag(A))
+  if(pheno_error) diag(B) <- abs(diag(B))
+  A <- as.matrix(nearPD(A,keepDiag = FALSE)$mat)
+  B <- as.matrix(nearPD(B,keepDiag = FALSE)$mat)
   if(calc_pheno)
   {
     pheno_error <- pheno_correlated <- FALSE
@@ -613,8 +661,27 @@ get_starting_pars <- function(A,B,options)
   return(start0)
 }
 
+##### convert theta back to covariance matrices
 get_final_pars <- function(PPE,theta)
 {
+  if(!is.null(PPE$optim_args$fixed_phylocov))
+  {
+    AB <- Rphylopars:::convert_pars2(PPE$theta,PPE$options,
+          if(is.null(PPE$optim_args$fixed_phylocov)) diag(PPE$options["nvar"]) else PPE$optim_args$fixed_phylocov,
+          if(is.null(PPE$optim_args$fixed_phenocov)) diag(PPE$options["nvar"]) else PPE$optim_args$fixed_phenocov,
+          PPE$optim_args$options["tree_height"])
+    A <- AB[1:PPE$options["nvar"],1:PPE$options["nvar"]]
+    B <- AB[1:PPE$options["nvar"]+PPE$options["nvar"],1:PPE$options["nvar"]]
+  
+    #if(PPE$optim_args$options["estim_phylocov"]==0) 
+      A <- A * PPE$norms %*% t(PPE$norms)
+    #if(PPE$optim_args$options["estim_phenocov"]==0) 
+      B <- B * PPE$norms %*% t(PPE$norms)
+    
+    rownames(A) <- rownames(B) <- colnames(A) <- colnames(B) <- colnames(PPE$pars[[1]])
+    return(list(Phylogenetic=A,Phenotypic=B))
+  }
+  
   if(missing(theta))
   {
     theta <- PPE$theta
@@ -877,7 +944,7 @@ phylopars.pca <- function(PPE,mode="cov",pgls_means=FALSE)
     Y <- phylopars.predict(PPE,nodes = NA,verbose = FALSE)[[1]]
   } else
   {
-    Y <- apply(trait_data[,2:ncol(trait_data),drop=FALSE],2,function(X) tapply(X,trait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
+    Y <- convert_to_means(trait_data,1,tree$tip.label)
   }
   Y <- Y[tree$tip.label,]
   n <- nrow(Y)
@@ -972,69 +1039,85 @@ summary.phylopars <- function(object, ...)
   ret
 }
 
-depost <- function(A,B,PPE,convert=TRUE)
+depost <- function(A,B,PPE,convert=TRUE,options)
 {
+  if(missing(PPE))
+  {
+    PPE <- list(options=options,norms=rep(1,options["nvar"]),theta=numeric(options["npars"]))
+  }
+  if(missing(options)) options <- PPE$options
   phylo_correlated <- as.logical(PPE$options["phylo_correlated"])
   pheno_error <- as.logical(PPE$options["pheno_error"])
   pheno_correlated <- PPE$options["pheno_error"] == 2
   calc_pheno <- PPE$options["pheno_error"] == 3
+  estim_phylocov <- as.logical(options["estim_phylocov"])
+  estim_phenocov <- as.logical(options["estim_phenocov"])
+  skip_phenocov <- if(!is.na(estim_phenocov)) !estim_phenocov else FALSE
+  skip_phylocov <- if(!is.na(estim_phylocov)) !estim_phylocov else FALSE
   if(calc_pheno) pheno_error <- pheno_corelated <- FALSE
   theta <- PPE$theta
-  if(convert) A <- A / (PPE$norms%*%t(PPE$norms))
-  if(pheno_error & !pheno_correlated)
+  if(convert) A <- as.matrix(A) / (PPE$norms%*%t(PPE$norms))
+  if(!skip_phenocov)
   {
-    if(convert) B <- B / (PPE$norms%*%t(PPE$norms))
-    if(length(B)>1)
+    if(pheno_error & !pheno_correlated)
     {
-      diag(B) <- log(diag(B))
-      theta[(length(theta)-length(diag(B))+1):length(theta)] <- diag(B)
-    } else
+      if(convert) B <- as.matrix(B) / (PPE$norms%*%t(PPE$norms))
+      if(length(B)>1)
+      {
+        diag(B) <- log(diag(B))
+        theta[(length(theta)-length(diag(B))+1):length(theta)] <- diag(B)
+      } else
+      {
+        theta[length(theta)] <- log(B)
+      }
+    } else if(pheno_correlated)
     {
-      theta[length(theta)] <- log(B)
+      B <- B / (PPE$norms%*%t(PPE$norms))
+      if(length(B)>1)
+      {
+        B <- t(chol(B))
+        diag(B) <- log(diag(B))
+        B[2,1] <- B[2,1]/exp(B[1,1])
+        B[upper.tri(B,FALSE)] <- t(B)[upper.tri(B,FALSE)]
+        theta[(length(theta)-length(which(upper.tri(B,TRUE)))+1):length(theta)] <- B[upper.tri(B,TRUE)]
+      } else
+      {
+        B <- log(B)
+        theta[length(theta)] <- B
+      }
     }
-  } else if(pheno_correlated)
+  }
+  if(!skip_phylocov)
   {
-    B <- B / (PPE$norms%*%t(PPE$norms))
-    if(length(B)>1)
+    if(phylo_correlated)
     {
-      B <- t(chol(B))
-      diag(B) <- log(diag(B))
-      B[2,1] <- B[2,1]/exp(B[1,1])
-      B[upper.tri(B,FALSE)] <- t(B)[upper.tri(B,FALSE)]
-      theta[(length(theta)-length(which(upper.tri(B,TRUE)))+1):length(theta)] <- B[upper.tri(B,TRUE)]
-    } else
-    {
-      B <- log(B)
-      theta[length(theta)] <- B
+      A <- as.matrix(nearPD(A)$mat)
+      A <- t(chol(A))
     }
-  }
-  if(phylo_correlated)
-  {
-    A <- t(chol(A))
-  }
-  if(length(A)>1)
-  {
-    diag(A) <- log(diag(A))
-  } else
-  {
-    A <- log(A)
-  }
-  if(phylo_correlated & length(A)>1)
-  {
-    A[2,1] <- A[2,1]/exp(A[1,1])
-  }
-  A[upper.tri(A,FALSE)] <- t(A)[upper.tri(A,FALSE)]
-  if(phylo_correlated)
-  {
-    theta[1:length(which(upper.tri(A,TRUE)))] <- A[upper.tri(A,TRUE)]
-  } else
-  {
     if(length(A)>1)
     {
-      theta[1:length(diag(A))] <- diag(A)
+      diag(A) <- log(diag(A))
     } else
     {
-      theta[1] <- A
+      A <- log(A)
+    }
+    if(phylo_correlated & length(A)>1)
+    {
+      A[2,1] <- A[2,1]/exp(A[1,1])
+    }
+    A[upper.tri(A,FALSE)] <- t(A)[upper.tri(A,FALSE)]
+    if(phylo_correlated)
+    {
+      theta[1:length(which(upper.tri(A,TRUE)))] <- A[upper.tri(A,TRUE)]
+    } else
+    {
+      if(length(A)>1)
+      {
+        theta[1:length(diag(A))] <- diag(A)
+      } else
+      {
+        theta[1] <- A
+      }
     }
   }
   theta
@@ -1057,8 +1140,8 @@ phylopars.predict <- function(PPE,nodes,tips,verbose=FALSE)
   calc_pheno <- options["pheno_error"]==3
   if(calc_pheno) pheno_error <- pheno_correlated <- TRUE
   ztrait_data <- PPE$ztrait_data
-  
-  X <- apply(ztrait_data[,2:ncol(ztrait_data),drop=FALSE],2,function(X) tapply(X,ztrait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
+  X <- convert_to_means(ztrait_data,1,tree$tip.label)
+  #X <- apply(ztrait_data[,2:ncol(ztrait_data),drop=FALSE],2,function(X) tapply(X,ztrait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
   
   species_no_data <- apply(X,1,function(X) all(is.na(X)))
   any_species_no_data <- any(species_no_data)
@@ -1190,7 +1273,7 @@ phylopars.predict <- function(PPE,nodes,tips,verbose=FALSE)
                                               lower_bounds=PPE$optim_args$lower_bounds, upper_bounds=PPE$optim_args$upper_bounds, models=PPE$optim_args$models,
                                               externalEdge = PPE$optim_args$externalEdge, not_externalEdge=PPE$optim_args$not_externalEdge,
                                               dist_anc=PPE$optim_args$dist_anc,dist_des=PPE$optim_args$dist_des,Tmax=PPE$optim_args$Tmax,
-                                              Tmin=PPE$optim_args$Tmin,non_optim_transform=PPE$optim_args$non_optim_transform,
+                                              Tmin=PPE$optim_args$Tmin,
                                               nmodels=PPE$optim_args$nmodels,OU_D=PPE$optim_args$OU_D,times=PPE$optim_args$times)
         
         
@@ -1200,7 +1283,7 @@ phylopars.predict <- function(PPE,nodes,tips,verbose=FALSE)
                                    lower_bounds=PPE$optim_args$lower_bounds, upper_bounds=PPE$optim_args$upper_bounds, models=PPE$optim_args$models,
                                    externalEdge = PPE$optim_args$externalEdge, not_externalEdge=PPE$optim_args$not_externalEdge,
                                    dist_anc=PPE$optim_args$dist_anc,dist_des=PPE$optim_args$dist_des,Tmax=PPE$optim_args$Tmax,
-                                   Tmin=PPE$optim_args$Tmin,non_optim_transform=PPE$optim_args$non_optim_transform,
+                                   Tmin=PPE$optim_args$Tmin,
                                    nmodels=PPE$optim_args$nmodels,OU_D=PPE$optim_args$OU_D,times=PPE$optim_args$times)
       } else if(pheno_correlated)
       {
@@ -1211,7 +1294,7 @@ phylopars.predict <- function(PPE,nodes,tips,verbose=FALSE)
                                              lower_bounds=PPE$optim_args$lower_bounds, upper_bounds=PPE$optim_args$upper_bounds, models=PPE$optim_args$models,
                                              externalEdge = PPE$optim_args$externalEdge, not_externalEdge=PPE$optim_args$not_externalEdge,
                                              dist_anc=PPE$optim_args$dist_anc,dist_des=PPE$optim_args$dist_des,Tmax=PPE$optim_args$Tmax,
-                                             Tmin=PPE$optim_args$Tmin,non_optim_transform=PPE$optim_args$non_optim_transform,
+                                             Tmin=PPE$optim_args$Tmin,
                                              nmodels=PPE$optim_args$nmodels,OU_D=PPE$optim_args$OU_D,times=PPE$optim_args$times)
       } else
       {
@@ -1223,7 +1306,7 @@ phylopars.predict <- function(PPE,nodes,tips,verbose=FALSE)
                                            lower_bounds=PPE$optim_args$lower_bounds, upper_bounds=PPE$optim_args$upper_bounds, models=PPE$optim_args$models,
                                            externalEdge = PPE$optim_args$externalEdge, not_externalEdge=PPE$optim_args$not_externalEdge,
                                            dist_anc=PPE$optim_args$dist_anc,dist_des=PPE$optim_args$dist_des,Tmax=PPE$optim_args$Tmax,
-                                           Tmin=PPE$optim_args$Tmin,non_optim_transform=PPE$optim_args$non_optim_transform,
+                                           Tmin=PPE$optim_args$Tmin,
                                            nmodels=PPE$optim_args$nmodels,OU_D=PPE$optim_args$OU_D,times=PPE$optim_args$times)
       }
       predict_mat[temp_root,] <- temp[,1]
@@ -1307,7 +1390,8 @@ phylopars.crossvalidate <- function(PPE,plot=FALSE,verbose=FALSE)
       trait_data <- PPE$trait_data
       ztrait_data[ztrait_data$species==tree$tip.label[temp_root],j+1] <- NA
       trait_data[trait_data$species==tree$tip.label[temp_root],j+1] <- NA
-      X <- apply(ztrait_data[,2:ncol(ztrait_data),drop=FALSE],2,function(X) tapply(X,ztrait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
+      X <- convert_to_means(ztrait_data,1,tree$tip.label)
+      #X <- apply(ztrait_data[,2:ncol(ztrait_data),drop=FALSE],2,function(X) tapply(X,ztrait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
       X <- X[PPE$tree$tip.label,,drop=FALSE]
       species_no_data <- apply(X,1,function(X) all(is.na(X)))
       any_species_no_data <- any(species_no_data)
@@ -1413,7 +1497,7 @@ phylopars.crossvalidate <- function(PPE,plot=FALSE,verbose=FALSE)
       
       model_args <- list(lower_bounds=PPE$optim_args$lower_bounds,upper_bounds=PPE$optim_args$upper_bounds,models=PPE$optim_args$models,
                          externalEdge=externalEdge,not_externalEdge=not_externalEdge,dist_anc=dist_anc,dist_des=dist_des,
-                         Tmax=Tmax,Tmin=Tmin,non_optim_transform=PPE$optim_args$non_optim_transform,nmodels=PPE$optim_args$nmodels,
+                         Tmax=Tmax,Tmin=Tmin,nmodels=PPE$optim_args$nmodels,
                          OU_D=OU_D,times=times)
       
       
@@ -1482,8 +1566,7 @@ phylopars.crossvalidate <- function(PPE,plot=FALSE,verbose=FALSE)
   rownames(cvfeaturematrix)[1:nspecies] <- tree$tip.label
   colnames(cvfeaturematrix) <- colnames(ztrait_data)[which(colnames(ztrait_data)!="species")]
   cvfeaturematrix <- cvfeaturematrix[1:nspecies,,drop=FALSE]
-  featurematrix <- apply(PPE$trait_data[,2:ncol(PPE$trait_data),drop=FALSE],2,function(X) tapply(X,PPE$trait_data[,1],function(Y) mean(Y,na.rm=TRUE)))
-  featurematrix <- featurematrix[PPE$tree$tip.label,,drop=FALSE]
+  featurematrix <- convert_to_means(PPE$trait_data,1,tree$tip.label)
   delta <- cvfeaturematrix - featurematrix
   absdelta <- abs(delta)
   absbias <- apply(delta,2,function(X) mean(X,na.rm=TRUE))
