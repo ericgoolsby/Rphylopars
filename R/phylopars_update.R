@@ -96,7 +96,7 @@ phylopars3 <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=T
   if(pheno_correlated) pheno_error <- TRUE
   if(max(table(as.character(trait_data$species)))>1 & if(!missing(pheno_error)) !pheno_error else FALSE)
   {
-    temp_dat <- phylocurve:::convert_to_means(trait_data,sort_vec=tree$tip.label)
+    temp_dat <- convert_to_means(trait_data,sort_vec=tree$tip.label)
     temp_dat <- data.frame(species=rownames(temp_dat),temp_dat)
     trait_data <- temp_dat
     rm(temp_dat)

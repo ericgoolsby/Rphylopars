@@ -7,6 +7,5 @@ Description: Tools for performing phylogenetic comparative methods for datasets 
 Date: 2015-06-02
 Depends: ape
 License: GPL (>= 2)
-Depends: phylocurve
 Imports: Rcpp, doBy, geiger, phylolm, phytools, mvnmle, Matrix
 LinkingTo: Rcpp, RcppArmadillo

@@ -7,7 +7,6 @@ importFrom(phytools, pbtree, sim.corrs, fastBM,splitTree,paste.tree,sampleFrom)
 importFrom(phylolm,three.point.compute,transf.branch.lengths,pruningwise.branching.times,pruningwise.distFromRoot)
 importFrom(mvnmle,mlest)
 importFrom(Matrix,nearPD)
-import(phylocurve)
 export(
 anova.phylopars.lm,
 logLik.phylopars,

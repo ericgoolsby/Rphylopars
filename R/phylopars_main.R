@@ -788,61 +788,80 @@ get_final_pars <- function(PPE,theta)
   return(list(Phylogenetic=A,Phenotypic=B))
 }
 
-simtraits <- function(ntaxa=15,ntraits=4,nreps=3,nmissing=10,tree,v,anc,intraspecific)
+simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspecific,model="BM",parameters,nsim=1,return.type="data.frame")
 {
-  if(missing(intraspecific)) intraspecific <- 0.1
+  if(nmissing>(ntaxa*ntraits*nreps)) nmissing <- round(runif(1,ntaxa*ntraits*nreps-1))
   if(missing(tree))
   {
     tree <- pbtree(n=ntaxa)
-  }
+  } else ntaxa <- length(tree$tip.label)
+  tree <- reorder(tree,"postorder")
+  perm_tree <- tree
+  if(model!="BM") tree <- transf.branch.lengths(phy = tree,model = model,parameters = parameters)$tree
   if(missing(v))
   {
-    v <- matrix(.8,ntraits,ntraits)
-    diag(v) <- 1
-  }
+    v <- matrix(0,ntraits,ntraits)
+    npars <- length(v[upper.tri(v,TRUE)])
+    pars <- rnorm(npars)
+    v[upper.tri(v,TRUE)] <- pars
+    v <- t(v)%*%v
+  } else ntraits = length(diag(v))
   if(missing(anc))
   {
     anc <- rep(0,ntraits)
-  }
-  X <- as.matrix(sim.corrs(tree,v,anc))
-  original_X <- X
-  if(nreps>1)
+  } else if(length(anc)==1) anc <- rep(anc,ntraits)
+  anc <- as.double(anc)
+  
+  if(missing(intraspecific)) intraspecific <- 0.1
+  if(length(intraspecific)==1)
   {
-    nreps <- nreps - 1
-    if(length(intraspecific)==1)
+    opt <- 1
+    intraspecific <- matrix(rep(intraspecific,ntraits*ntaxa),nrow = ntaxa,ncol = ntraits)
+  } else if(length(intraspecific)==ntraits)
+  {
+    opt <- 2
+    intraspecific <- t(matrix(rep(intraspecific,ntaxa),nrow=ntraits))
+  } else opt <- 3
+  anc_mat <- matrix(1,ntaxa) %*% anc
+  Xall <- sim.char(phy = tree,par = v,nsim = nsim)
+  colnames(Xall) <- paste("V",1:ntraits,sep="")
+  if(nreps==1 & nmissing==0 & nsim==1)
+  {
+    if(return.type=="matrix") return(list(trait_data=Xall[,,1],tree=perm_tree,sim_tree=tree)) else
+      return(list(trait_data=data.frame(species=rownames(Xall[,,1]),Xall[,,1]),tree=perm_tree,sim_tree=tree))
+  } else if(nreps==1 & nmissing==0) 
+  {
+    if(return.type=="matrix")
     {
-      intraspecific <- matrix(rep(intraspecific,ntraits*ntaxa),nrow = ntaxa,ncol = ntraits)
-      X[1:length(X)] <- matrix(sampleFrom(original_X,intraspecific,n = matrix(rep(rep(1,ntaxa),ntraits),ncol=ntraits)),ncol=ntraits,dimnames = list(rownames(original_X),paste("V",1:ntraits,sep="")))
-      for(i in 1:nreps)
-      {
-        X <- rbind(X,matrix(sampleFrom(original_X,intraspecific,n = matrix(rep(rep(1,ntaxa),ntraits),ncol=ntraits)),ncol=ntraits,dimnames = list(rownames(original_X),paste("V",1:ntraits,sep=""))))      
-      }
-    } else if(length(intraspecific)==ntraits)
+      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]]),tree=perm_tree,sim_tree=tree))
+    } else
+      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) data.frame(species=rownames(X[[1]]),X[[1]])),tree=perm_tree,sim_tree=tree))
+  }
+  
+  X <- original_X <- rep(list(matrix(0,ntaxa*nreps,ntraits)),nsim)
+  for(j in 1:nsim)
+  {
+    Xall[,,j] <- Xall[,,j] + anc_mat
+    if(nreps==1)
     {
-      intraspecific <- t(matrix(rep(intraspecific,ntaxa),nrow=ntraits))
-      X[1:length(X)] <- matrix(sampleFrom(original_X,intraspecific,n = matrix(rep(rep(1,ntaxa),ntraits),ncol=ntraits)),ncol=ntraits,dimnames = list(rownames(original_X),paste("V",1:ntraits,sep="")))
-      for(i in 1:nreps)
-      {
-        X <- rbind(X,matrix(sampleFrom(original_X,intraspecific,n = matrix(rep(rep(1,ntaxa),ntraits),ncol=ntraits)),ncol=ntraits,dimnames = list(rownames(original_X),paste("V",1:ntraits,sep=""))))      
-      }
+      X[[j]][1:(ntraits*ntaxa)] <- original_X[[j]][1:(ntraits*ntaxa)] <- Xall[,,j]
     } else
     {
-      X[1:length(X)] <- matrix(sampleFrom(original_X,intraspecific,n = matrix(rep(rep(1,ntaxa),ntraits),ncol=ntraits)),ncol=ntraits,dimnames = list(rownames(original_X),paste("V",1:ntraits,sep="")))
-      for(i in 1:nreps)
+      for(jj in 1:nreps)
       {
-        X <- rbind(X,matrix(sampleFrom(original_X,intraspecific,n = matrix(rep(rep(1,ntaxa),ntraits),ncol=ntraits)),ncol=ntraits,dimnames = list(rownames(original_X),paste("V",1:ntraits,sep=""))))      
+        original_X[[j]] <- Xall[,,j]
+        X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- rnorm(n = ntraits*ntaxa,mean = Xall[,,j],sd = intraspecific)
       }
     }
+    X[[j]][sample(1:length(X[[j]]),nmissing)] <- NA
+    colnames(X[[j]]) <- paste("V",1:ncol(X[[j]]),sep = "")
+    species <- rep(rownames(Xall[,,j]),nreps)
+    rownames(X[[j]]) <- 1:nrow(X[[j]])
+    X[[j]] <- data.frame(species=species,X[[j]])
+    if(nreps==1) rownames(X[[j]]) <- species
   }
-  X[sample(1:length(X),nmissing)] <- NA
-  colnames(X) <- paste("V",1:ncol(X),sep = "")
-  species <- rownames(X)
-  rownames(X) <- 1:nrow(X)
-  X <- as.data.frame(X)
-  X <- data.frame(X,species=species)
-  if(nreps==1) rownames(X) <- species
-  X <- X[,c(ncol(X),1:(ncol(X)-1))]
-  return(list(trait_data=X,tree=tree))
+  if(nsim==1) list(trait_data=X[[1]],tree=perm_tree,sim_tree=tree,original_X=original_X[[1]]) else
+    list(trait_data=X,tree=perm_tree,sim_tree=tree,original_X=original_X)
 }
 
 write.phylopars <- function(trait_data,tree,data_file,tree_file,species_identifier="species")
