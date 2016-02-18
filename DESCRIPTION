@@ -1,10 +1,10 @@
 Package: Rphylopars
-Version: 0.1.1
+Version: 0.2.0
 Title: Phylogenetic Comparative Tools for Missing Data and Within-Species Variation
 Author: Eric W. Goolsby, Jorn Bruggeman, Cecile Ane
 Maintainer: Eric W. Goolsby <eric.goolsby.evolution@gmail.com>
 Description: Tools for performing phylogenetic comparative methods for datasets with with multiple observations per species (intraspecific variation or measurement error) and/or missing data. Available functions allow ancestral state reconstruction, missing data imputation, phylogenetic regression (phylogenetic generalized least squares), and phylogenetic principal components analysis (pPCA).
-Date: 2015-06-02
+Date: 2015-02-01
 Depends: ape
 License: GPL (>= 2)
 Imports: Rcpp, doBy, geiger, phylolm, phytools, mvnmle, Matrix

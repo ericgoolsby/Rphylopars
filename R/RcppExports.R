@@ -13,7 +13,7 @@ mat_to_pars2 <- function(M, nvar, diag) {
     .Call('Rphylopars_mat_to_pars2', PACKAGE = 'Rphylopars', M, nvar, diag)
 }
 
-pars_to_mat <- function(pars, nvar, diag, log_chol = 0L, mod_chol = 0L) {
+pars_to_mat <- function(pars, nvar, diag, log_chol = 1L, mod_chol = 1L) {
     .Call('Rphylopars_pars_to_mat', PACKAGE = 'Rphylopars', pars, nvar, diag, log_chol, mod_chol)
 }
 
@@ -27,93 +27,5 @@ tp <- function(L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, pa
 
 EM_Fels2008 <- function(pics, vars, phylocov, phenocov, nvar, phylocov_fixed, phenocov_fixed, is_phylocov_fixed = 0L, is_phenocov_fixed = 0L, diag_pheno = 0L, EM_Fels_limit = 5000L, tol = 1e-6, REML = 1L, diag_phylo = 0L) {
     .Call('Rphylopars_EM_Fels2008', PACKAGE = 'Rphylopars', pics, vars, phylocov, phenocov, nvar, phylocov_fixed, phenocov_fixed, is_phylocov_fixed, is_phenocov_fixed, diag_pheno, EM_Fels_limit, tol, REML, diag_phylo)
-}
-
-cDot <- function(A, B) {
-    .Call('Rphylopars_cDot', PACKAGE = 'Rphylopars', A, B)
-}
-
-fast_inv <- function(nspecies, nedge, len_vec, anc, des) {
-    .Call('Rphylopars_fast_inv', PACKAGE = 'Rphylopars', nspecies, nedge, len_vec, anc, des)
-}
-
-testmat <- function(nrow) {
-    .Call('Rphylopars_testmat', PACKAGE = 'Rphylopars', nrow)
-}
-
-getInv <- function(nspecies, nedge, len_vec, anc, des, inv = 1L) {
-    .Call('Rphylopars_getInv', PACKAGE = 'Rphylopars', nspecies, nedge, len_vec, anc, des, inv)
-}
-
-fast_inv2 <- function(nspecies, nedge, len_vec, bool_vec, des_list, des_n, is_tip, ret_inv = 1L) {
-    .Call('Rphylopars_fast_inv2', PACKAGE = 'Rphylopars', nspecies, nedge, len_vec, bool_vec, des_list, des_n, is_tip, ret_inv)
-}
-
-Rcpp_chol <- function(M) {
-    .Call('Rphylopars_Rcpp_chol', PACKAGE = 'Rphylopars', M)
-}
-
-try_clip <- function(M, nvar, verbose) {
-    .Call('Rphylopars_try_clip', PACKAGE = 'Rphylopars', M, nvar, verbose)
-}
-
-which2 <- function(x, y) {
-    .Call('Rphylopars_which2', PACKAGE = 'Rphylopars', x, y)
-}
-
-condition_f <- function(iu, i, nspecies, edge, nob) {
-    .Call('Rphylopars_condition_f', PACKAGE = 'Rphylopars', iu, i, nspecies, edge, nob)
-}
-
-convert_pars <- function(theta, options, T = 1) {
-    .Call('Rphylopars_convert_pars', PACKAGE = 'Rphylopars', theta, options, T)
-}
-
-convert_pars2 <- function(theta, options, fixed_phylocov, fixed_phenocov, tree_height = 1, check1 = 1L) {
-    .Call('Rphylopars_convert_pars2', PACKAGE = 'Rphylopars', theta, options, fixed_phylocov, fixed_phenocov, tree_height, check1)
-}
-
-threepoint <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-threepoint_nopheno <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, edgevec, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint_nopheno', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, edgevec, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-threepoint2 <- function(theta, options, y, edge, edgelength, subset_list, species_subset, tip_combn, ymin, ymax, ind_edge, anc_edge, fixed_phylocov, fixed_phenocov, inv_phenocovs) {
-    .Call('Rphylopars_threepoint2', PACKAGE = 'Rphylopars', theta, options, y, edge, edgelength, subset_list, species_subset, tip_combn, ymin, ymax, ind_edge, anc_edge, fixed_phylocov, fixed_phenocov, inv_phenocovs)
-}
-
-threepoint3 <- function(theta, options, y, edge, edgelength, subset_list, species_subset, tip_combn, ymin, ymax, ind_edge, anc_edge, fixed_phylocov, fixed_phenocov, inv_phenocovs) {
-    .Call('Rphylopars_threepoint3', PACKAGE = 'Rphylopars', theta, options, y, edge, edgelength, subset_list, species_subset, tip_combn, ymin, ymax, ind_edge, anc_edge, fixed_phylocov, fixed_phenocov, inv_phenocovs)
-}
-
-threepoint_phenocorr <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint_phenocorr', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-threepoint_calc_pheno <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, phenocovs, inv_phenocovs, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint_calc_pheno', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, phenocovs, inv_phenocovs, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-threepoint_predict <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint_predict', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-threepoint_nopheno_predict <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, edgevec, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint_nopheno_predict', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, edgevec, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-threepoint_phenocorr_predict <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint_phenocorr_predict', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-threepoint_calc_pheno_predict <- function(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, phenocovs, inv_phenocovs, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times) {
-    .Call('Rphylopars_threepoint_calc_pheno_predict', PACKAGE = 'Rphylopars', theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, phenocovs, inv_phenocovs, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times)
-}
-
-recursion <- function(edge, any_species_no_data, which_no_species_data, iu, options, species, tiplabel) {
-    .Call('Rphylopars_recursion', PACKAGE = 'Rphylopars', edge, any_species_no_data, which_no_species_data, iu, options, species, tiplabel)
 }
 
