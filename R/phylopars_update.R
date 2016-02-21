@@ -114,7 +114,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   
   # index for model parameters
   if(!is.na(phylocov_fixed)[[1]]) phylocov_pars <- numeric() else if(phylo_correlated) phylocov_pars <- 1:((nvar^2-nvar)/2+nvar) else phylocov_pars <- 1:nvar
-  if(!is.na(phenocov_fixed)[[1]]) phenocov_pars <- numeric() else if(pheno_error>0) phenocov_pars <- if(pheno_correlated) length(phylocov_pars) + 1:((nvar^2-nvar)/2+nvar) else (phylocov_pars[length(phylocov_pars)]+1):(phylocov_pars[length(phylocov_pars)]+nvar)
+  if(!is.na(phenocov_fixed)[[1]]) phenocov_pars <- numeric() else if(pheno_error>0) phenocov_pars <- if(pheno_correlated) length(phylocov_pars) + 1:((nvar^2-nvar)/2+nvar) else (length(phylocov_pars)+1):(length(phylocov_pars)+nvar)
   if(model=="mvOU")
   {
     if(!is.na(model_par_fixed)[[1]]) alpha_pars <- numeric() else alpha_pars <- if(full_alpha) length(phylocov_pars) + 1:((nvar^2-nvar)/2+nvar) else (length(phylocov_pars)+1):(length(phylocov_pars)+nvar)
@@ -463,7 +463,6 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
               is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
               is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
     mu <- ll2[[2]]
-    
     if(!(!do_optim | skip_optim))
     {
       tedge_vec <- edge_vec
