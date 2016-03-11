@@ -5,14 +5,14 @@
 Phylogenetic Comparative Tools for Missing Data and Within-Species Variation
 }
 \description{
-Tools for performing phylogenetic comparative methods for datasets with with multiple observations per species (intraspecific variation or measurement error) and/or missing data. Available functions allow ancestral state reconstruction, missing data imputation, phylogenetic regression (phylogenetic generalized least squares), and phylogenetic principal components analysis (pPCA).
+Tools for performing phylogenetic comparative methods for datasets with with multiple observations per species (intraspecific variation or measurement error) and/or missing data. Performs ancestral state reconstruction and missing data imputation on the estimated evolutionary model, which can be specified as Brownian Motion, Ornstein-Uhlenbeck, Early-Burst, Pagel's lambda, kappa, or delta, or a star phylogeny.
 }
 \details{
 \tabular{ll}{
 Package: \tab Rphylopars\cr
 Type: \tab Package\cr
-Version: \tab 0.1.1\cr
-Date: \tab 2015-06-02\cr
+Version: \tab 0.2.1\cr
+Date: \tab 2015-02-21\cr
 License: \tab GPL (>= 2)\cr
 }
 }
@@ -27,8 +27,6 @@ Bruggeman J, Heringa J and Brandt BW. (2009) PhyloPars: estimation of missing pa
 
 Ho, L. S. T. and Ane, C. 2014. "A linear-time algorithm for Gaussian and non-Gaussian trait evolution models". Systematic Biology 63(3):397-408.
 }
-\keyword{ Phylogenetic regression }
-\keyword{ Phylogenetic principle components analysis }
 \keyword{ Phylogenetic variance-covariance }
 \keyword{ Ancestral state reconstruction }
 \keyword{ Intraspecific variation }
@@ -47,17 +45,20 @@ sim_data <- simtraits(ntaxa = 15,ntraits = 4,nreps = 3,nmissing = 10)
 # phylo_correlated = TRUE assumed traits are correlated
 
 PPE <- phylopars(trait_data = sim_data$trait_data,tree = sim_data$tree,
-  pheno_error = TRUE,phylo_correlated = TRUE,pheno_correlated = FALSE)
+  pheno_error = TRUE,phylo_correlated = TRUE,pheno_correlated = TRUE)
 
 PPE
 
-# perform phylogenetic PCA
-PPE_pca <- phylopars.pca(PPE)
-summary(PPE_pca)
+PPE$anc_recon # Ancestral state reconstruction and species mean prediction
+PPE$anc_var # Prediction variance
 
-# perform phylogenetic regression
-p_BM <- phylopars.lm(V3~V1+V2,trait_data = sim_data$trait_data,tree = sim_data$tree,model = "BM")
 
-# perform ancestral state reconstruction / tip prediction
-PPP_ace <- phylopars.predict(PPE)
+###NOT RUN
+# estimate parameters under multivariate OU
+# PPE_OU <- phylopars(trait_data = sim_data$trait_data,tree = sim_data$tree,
+#    model="mvOU",pheno_error = TRUE,phylo_correlated = TRUE,
+#    pheno_correlated = TRUE)
+#
+# PPE
+
 }

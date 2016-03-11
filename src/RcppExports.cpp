@@ -6,42 +6,6 @@
 
 using namespace Rcpp;
 
-// Rcpp_chol
-arma::mat Rcpp_chol(arma::mat M);
-RcppExport SEXP Rphylopars_Rcpp_chol(SEXP MSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
-    __result = Rcpp::wrap(Rcpp_chol(M));
-    return __result;
-END_RCPP
-}
-// try_clip
-arma::mat try_clip(arma::mat M, int nvar, int verbose);
-RcppExport SEXP Rphylopars_try_clip(SEXP MSEXP, SEXP nvarSEXP, SEXP verboseSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
-    Rcpp::traits::input_parameter< int >::type nvar(nvarSEXP);
-    Rcpp::traits::input_parameter< int >::type verbose(verboseSEXP);
-    __result = Rcpp::wrap(try_clip(M, nvar, verbose));
-    return __result;
-END_RCPP
-}
-// cDot
-arma::mat cDot(arma::mat A, arma::mat B);
-RcppExport SEXP Rphylopars_cDot(SEXP ASEXP, SEXP BSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type B(BSEXP);
-    __result = Rcpp::wrap(cDot(A, B));
-    return __result;
-END_RCPP
-}
 // try_inv
 arma::mat try_inv(arma::mat M, int nvar);
 RcppExport SEXP Rphylopars_try_inv(SEXP MSEXP, SEXP nvarSEXP) {
@@ -66,344 +30,121 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// which2
-arma::uvec which2(arma::vec x, int y);
-RcppExport SEXP Rphylopars_which2(SEXP xSEXP, SEXP ySEXP) {
+// mat_to_pars2
+arma::vec mat_to_pars2(arma::mat M, int nvar, int diag);
+RcppExport SEXP Rphylopars_mat_to_pars2(SEXP MSEXP, SEXP nvarSEXP, SEXP diagSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type y(ySEXP);
-    __result = Rcpp::wrap(which2(x, y));
+    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type nvar(nvarSEXP);
+    Rcpp::traits::input_parameter< int >::type diag(diagSEXP);
+    __result = Rcpp::wrap(mat_to_pars2(M, nvar, diag));
     return __result;
 END_RCPP
 }
-// condition_f
-arma::uvec condition_f(arma::vec iu, int i, int nspecies, arma::mat edge, int nob);
-RcppExport SEXP Rphylopars_condition_f(SEXP iuSEXP, SEXP iSEXP, SEXP nspeciesSEXP, SEXP edgeSEXP, SEXP nobSEXP) {
+// pars_to_mat
+arma::mat pars_to_mat(arma::vec pars, int nvar, int diag, int log_chol, int mod_chol);
+RcppExport SEXP Rphylopars_pars_to_mat(SEXP parsSEXP, SEXP nvarSEXP, SEXP diagSEXP, SEXP log_cholSEXP, SEXP mod_cholSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< int >::type nvar(nvarSEXP);
+    Rcpp::traits::input_parameter< int >::type diag(diagSEXP);
+    Rcpp::traits::input_parameter< int >::type log_chol(log_cholSEXP);
+    Rcpp::traits::input_parameter< int >::type mod_chol(mod_cholSEXP);
+    __result = Rcpp::wrap(pars_to_mat(pars, nvar, diag, log_chol, mod_chol));
+    return __result;
+END_RCPP
+}
+// calc_OU_len
+List calc_OU_len(arma::vec heights, arma::mat edge_mat, arma::vec des_order, int nedge, arma::mat P, arma::vec lambda, arma::mat sigma, arma::vec anc, arma::vec des, int nvar, int nspecies);
+RcppExport SEXP Rphylopars_calc_OU_len(SEXP heightsSEXP, SEXP edge_matSEXP, SEXP des_orderSEXP, SEXP nedgeSEXP, SEXP PSEXP, SEXP lambdaSEXP, SEXP sigmaSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP nvarSEXP, SEXP nspeciesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type heights(heightsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type edge_mat(edge_matSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type des_order(des_orderSEXP);
+    Rcpp::traits::input_parameter< int >::type nedge(nedgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type P(PSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type anc(ancSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type des(desSEXP);
+    Rcpp::traits::input_parameter< int >::type nvar(nvarSEXP);
     Rcpp::traits::input_parameter< int >::type nspecies(nspeciesSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
+    __result = Rcpp::wrap(calc_OU_len(heights, edge_mat, des_order, nedge, P, lambda, sigma, anc, des, nvar, nspecies));
+    return __result;
+END_RCPP
+}
+// tp
+List tp(arma::mat L, arma::mat R, arma::mat Rmat, int mL, int mR, int pheno_error, arma::vec edge_vec, arma::vec edge_ind, arma::vec ind_edge, arma::vec parent_edges, arma::vec pars, unsigned int nvar, int phylocov_diag, int nind, int nob, int nspecies, int nedge, arma::vec anc, arma::vec des, int REML, List species_subset, List un_species_subset, List subset_list, List ind_list, arma::vec tip_combn, LogicalVector is_edge_ind, arma::mat fixed_mu, List OU_len, arma::mat phylocov_fixed, arma::mat phenocov_fixed, int is_phylocov_fixed, int is_phenocov_fixed, int OU_par, int ret_level, int use_LL);
+RcppExport SEXP Rphylopars_tp(SEXP LSEXP, SEXP RSEXP, SEXP RmatSEXP, SEXP mLSEXP, SEXP mRSEXP, SEXP pheno_errorSEXP, SEXP edge_vecSEXP, SEXP edge_indSEXP, SEXP ind_edgeSEXP, SEXP parent_edgesSEXP, SEXP parsSEXP, SEXP nvarSEXP, SEXP phylocov_diagSEXP, SEXP nindSEXP, SEXP nobSEXP, SEXP nspeciesSEXP, SEXP nedgeSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP REMLSEXP, SEXP species_subsetSEXP, SEXP un_species_subsetSEXP, SEXP subset_listSEXP, SEXP ind_listSEXP, SEXP tip_combnSEXP, SEXP is_edge_indSEXP, SEXP fixed_muSEXP, SEXP OU_lenSEXP, SEXP phylocov_fixedSEXP, SEXP phenocov_fixedSEXP, SEXP is_phylocov_fixedSEXP, SEXP is_phenocov_fixedSEXP, SEXP OU_parSEXP, SEXP ret_levelSEXP, SEXP use_LLSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type L(LSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type R(RSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Rmat(RmatSEXP);
+    Rcpp::traits::input_parameter< int >::type mL(mLSEXP);
+    Rcpp::traits::input_parameter< int >::type mR(mRSEXP);
+    Rcpp::traits::input_parameter< int >::type pheno_error(pheno_errorSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type edge_vec(edge_vecSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type edge_ind(edge_indSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ind_edge(ind_edgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type parent_edges(parent_edgesSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nvar(nvarSEXP);
+    Rcpp::traits::input_parameter< int >::type phylocov_diag(phylocov_diagSEXP);
+    Rcpp::traits::input_parameter< int >::type nind(nindSEXP);
     Rcpp::traits::input_parameter< int >::type nob(nobSEXP);
-    __result = Rcpp::wrap(condition_f(iu, i, nspecies, edge, nob));
-    return __result;
-END_RCPP
-}
-// convert_pars
-arma::mat convert_pars(arma::vec theta, arma::vec options, double T);
-RcppExport SEXP Rphylopars_convert_pars(SEXP thetaSEXP, SEXP optionsSEXP, SEXP TSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< double >::type T(TSEXP);
-    __result = Rcpp::wrap(convert_pars(theta, options, T));
-    return __result;
-END_RCPP
-}
-// threepoint
-double threepoint(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint(theta, options, y, ku, iu, edge, edgelength, uchildren_list, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
-    return __result;
-END_RCPP
-}
-// threepoint_nopheno
-double threepoint_nopheno(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, arma::vec edgevec, List subset_list, List species_subset, arma::vec tip_combn, arma::vec ymin, arma::vec ymax, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint_nopheno(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP edgevecSEXP, SEXP subset_listSEXP, SEXP species_subsetSEXP, SEXP tip_combnSEXP, SEXP yminSEXP, SEXP ymaxSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgevec(edgevecSEXP);
-    Rcpp::traits::input_parameter< List >::type subset_list(subset_listSEXP);
+    Rcpp::traits::input_parameter< int >::type nspecies(nspeciesSEXP);
+    Rcpp::traits::input_parameter< int >::type nedge(nedgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type anc(ancSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type des(desSEXP);
+    Rcpp::traits::input_parameter< int >::type REML(REMLSEXP);
     Rcpp::traits::input_parameter< List >::type species_subset(species_subsetSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type tip_combn(tip_combnSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymin(yminSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymax(ymaxSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint_nopheno(theta, options, y, ku, iu, edge, edgelength, uchildren_list, edgevec, subset_list, species_subset, tip_combn, ymin, ymax, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
-    return __result;
-END_RCPP
-}
-// threepoint_phenocorr
-double threepoint_phenocorr(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, List subset_list, List species_subset, arma::vec tip_combn, arma::vec ymin, arma::vec ymax, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint_phenocorr(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP subset_listSEXP, SEXP species_subsetSEXP, SEXP tip_combnSEXP, SEXP yminSEXP, SEXP ymaxSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
+    Rcpp::traits::input_parameter< List >::type un_species_subset(un_species_subsetSEXP);
     Rcpp::traits::input_parameter< List >::type subset_list(subset_listSEXP);
-    Rcpp::traits::input_parameter< List >::type species_subset(species_subsetSEXP);
+    Rcpp::traits::input_parameter< List >::type ind_list(ind_listSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type tip_combn(tip_combnSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymin(yminSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymax(ymaxSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint_phenocorr(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
+    Rcpp::traits::input_parameter< LogicalVector >::type is_edge_ind(is_edge_indSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type fixed_mu(fixed_muSEXP);
+    Rcpp::traits::input_parameter< List >::type OU_len(OU_lenSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type phylocov_fixed(phylocov_fixedSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type phenocov_fixed(phenocov_fixedSEXP);
+    Rcpp::traits::input_parameter< int >::type is_phylocov_fixed(is_phylocov_fixedSEXP);
+    Rcpp::traits::input_parameter< int >::type is_phenocov_fixed(is_phenocov_fixedSEXP);
+    Rcpp::traits::input_parameter< int >::type OU_par(OU_parSEXP);
+    Rcpp::traits::input_parameter< int >::type ret_level(ret_levelSEXP);
+    Rcpp::traits::input_parameter< int >::type use_LL(use_LLSEXP);
+    __result = Rcpp::wrap(tp(L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, parent_edges, pars, nvar, phylocov_diag, nind, nob, nspecies, nedge, anc, des, REML, species_subset, un_species_subset, subset_list, ind_list, tip_combn, is_edge_ind, fixed_mu, OU_len, phylocov_fixed, phenocov_fixed, is_phylocov_fixed, is_phenocov_fixed, OU_par, ret_level, use_LL));
     return __result;
 END_RCPP
 }
-// threepoint_calc_pheno
-double threepoint_calc_pheno(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, List subset_list, List species_subset, arma::vec tip_combn, arma::vec ymin, arma::vec ymax, List phenocovs, List inv_phenocovs, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint_calc_pheno(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP subset_listSEXP, SEXP species_subsetSEXP, SEXP tip_combnSEXP, SEXP yminSEXP, SEXP ymaxSEXP, SEXP phenocovsSEXP, SEXP inv_phenocovsSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
+// EM_Fels2008
+arma::mat EM_Fels2008(arma::mat pics, arma::vec vars, arma::mat phylocov, arma::mat phenocov, int nvar, arma::mat phylocov_fixed, arma::mat phenocov_fixed, int is_phylocov_fixed, int is_phenocov_fixed, int diag_pheno, int EM_Fels_limit, double tol, int REML, int diag_phylo);
+RcppExport SEXP Rphylopars_EM_Fels2008(SEXP picsSEXP, SEXP varsSEXP, SEXP phylocovSEXP, SEXP phenocovSEXP, SEXP nvarSEXP, SEXP phylocov_fixedSEXP, SEXP phenocov_fixedSEXP, SEXP is_phylocov_fixedSEXP, SEXP is_phenocov_fixedSEXP, SEXP diag_phenoSEXP, SEXP EM_Fels_limitSEXP, SEXP tolSEXP, SEXP REMLSEXP, SEXP diag_phyloSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
-    Rcpp::traits::input_parameter< List >::type subset_list(subset_listSEXP);
-    Rcpp::traits::input_parameter< List >::type species_subset(species_subsetSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type tip_combn(tip_combnSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymin(yminSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymax(ymaxSEXP);
-    Rcpp::traits::input_parameter< List >::type phenocovs(phenocovsSEXP);
-    Rcpp::traits::input_parameter< List >::type inv_phenocovs(inv_phenocovsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint_calc_pheno(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, phenocovs, inv_phenocovs, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
-    return __result;
-END_RCPP
-}
-// threepoint_predict
-arma::mat threepoint_predict(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint_predict(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint_predict(theta, options, y, ku, iu, edge, edgelength, uchildren_list, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
-    return __result;
-END_RCPP
-}
-// threepoint_nopheno_predict
-arma::mat threepoint_nopheno_predict(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, arma::vec edgevec, List subset_list, List species_subset, arma::vec tip_combn, arma::vec ymin, arma::vec ymax, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint_nopheno_predict(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP edgevecSEXP, SEXP subset_listSEXP, SEXP species_subsetSEXP, SEXP tip_combnSEXP, SEXP yminSEXP, SEXP ymaxSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgevec(edgevecSEXP);
-    Rcpp::traits::input_parameter< List >::type subset_list(subset_listSEXP);
-    Rcpp::traits::input_parameter< List >::type species_subset(species_subsetSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type tip_combn(tip_combnSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymin(yminSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymax(ymaxSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint_nopheno_predict(theta, options, y, ku, iu, edge, edgelength, uchildren_list, edgevec, subset_list, species_subset, tip_combn, ymin, ymax, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
-    return __result;
-END_RCPP
-}
-// threepoint_phenocorr_predict
-arma::mat threepoint_phenocorr_predict(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, List subset_list, List species_subset, arma::vec tip_combn, arma::vec ymin, arma::vec ymax, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint_phenocorr_predict(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP subset_listSEXP, SEXP species_subsetSEXP, SEXP tip_combnSEXP, SEXP yminSEXP, SEXP ymaxSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
-    Rcpp::traits::input_parameter< List >::type subset_list(subset_listSEXP);
-    Rcpp::traits::input_parameter< List >::type species_subset(species_subsetSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type tip_combn(tip_combnSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymin(yminSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymax(ymaxSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint_phenocorr_predict(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
-    return __result;
-END_RCPP
-}
-// threepoint_calc_pheno_predict
-arma::mat threepoint_calc_pheno_predict(arma::vec theta, arma::vec options, arma::vec y, arma::vec ku, arma::vec iu, arma::mat edge, arma::vec edgelength, Rcpp::List uchildren_list, List subset_list, List species_subset, arma::vec tip_combn, arma::vec ymin, arma::vec ymax, List phenocovs, List inv_phenocovs, arma::vec non_optim_transform, arma::vec models, arma::uvec externalEdge, arma::uvec not_externalEdge, arma::vec dist_anc, arma::vec dist_des, double Tmax, double Tmin, int nmodels, arma::vec lower_bounds, arma::vec upper_bounds, arma::vec OU_D, arma::vec times);
-RcppExport SEXP Rphylopars_threepoint_calc_pheno_predict(SEXP thetaSEXP, SEXP optionsSEXP, SEXP ySEXP, SEXP kuSEXP, SEXP iuSEXP, SEXP edgeSEXP, SEXP edgelengthSEXP, SEXP uchildren_listSEXP, SEXP subset_listSEXP, SEXP species_subsetSEXP, SEXP tip_combnSEXP, SEXP yminSEXP, SEXP ymaxSEXP, SEXP phenocovsSEXP, SEXP inv_phenocovsSEXP, SEXP non_optim_transformSEXP, SEXP modelsSEXP, SEXP externalEdgeSEXP, SEXP not_externalEdgeSEXP, SEXP dist_ancSEXP, SEXP dist_desSEXP, SEXP TmaxSEXP, SEXP TminSEXP, SEXP nmodelsSEXP, SEXP lower_boundsSEXP, SEXP upper_boundsSEXP, SEXP OU_DSEXP, SEXP timesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ku(kuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type edgelength(edgelengthSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type uchildren_list(uchildren_listSEXP);
-    Rcpp::traits::input_parameter< List >::type subset_list(subset_listSEXP);
-    Rcpp::traits::input_parameter< List >::type species_subset(species_subsetSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type tip_combn(tip_combnSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymin(yminSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ymax(ymaxSEXP);
-    Rcpp::traits::input_parameter< List >::type phenocovs(phenocovsSEXP);
-    Rcpp::traits::input_parameter< List >::type inv_phenocovs(inv_phenocovsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type non_optim_transform(non_optim_transformSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type models(modelsSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type externalEdge(externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::uvec >::type not_externalEdge(not_externalEdgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_anc(dist_ancSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type dist_des(dist_desSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmax(TmaxSEXP);
-    Rcpp::traits::input_parameter< double >::type Tmin(TminSEXP);
-    Rcpp::traits::input_parameter< int >::type nmodels(nmodelsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lower_bounds(lower_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type upper_bounds(upper_boundsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type OU_D(OU_DSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type times(timesSEXP);
-    __result = Rcpp::wrap(threepoint_calc_pheno_predict(theta, options, y, ku, iu, edge, edgelength, uchildren_list, subset_list, species_subset, tip_combn, ymin, ymax, phenocovs, inv_phenocovs, non_optim_transform, models, externalEdge, not_externalEdge, dist_anc, dist_des, Tmax, Tmin, nmodels, lower_bounds, upper_bounds, OU_D, times));
-    return __result;
-END_RCPP
-}
-// recursion
-List recursion(arma::mat edge, int any_species_no_data, arma::vec which_no_species_data, arma::vec iu, arma::vec options, arma::vec species, arma::vec tiplabel);
-RcppExport SEXP Rphylopars_recursion(SEXP edgeSEXP, SEXP any_species_no_dataSEXP, SEXP which_no_species_dataSEXP, SEXP iuSEXP, SEXP optionsSEXP, SEXP speciesSEXP, SEXP tiplabelSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat >::type edge(edgeSEXP);
-    Rcpp::traits::input_parameter< int >::type any_species_no_data(any_species_no_dataSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type which_no_species_data(which_no_species_dataSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type iu(iuSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type options(optionsSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type species(speciesSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type tiplabel(tiplabelSEXP);
-    __result = Rcpp::wrap(recursion(edge, any_species_no_data, which_no_species_data, iu, options, species, tiplabel));
+    Rcpp::traits::input_parameter< arma::mat >::type pics(picsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type vars(varsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type phylocov(phylocovSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type phenocov(phenocovSEXP);
+    Rcpp::traits::input_parameter< int >::type nvar(nvarSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type phylocov_fixed(phylocov_fixedSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type phenocov_fixed(phenocov_fixedSEXP);
+    Rcpp::traits::input_parameter< int >::type is_phylocov_fixed(is_phylocov_fixedSEXP);
+    Rcpp::traits::input_parameter< int >::type is_phenocov_fixed(is_phenocov_fixedSEXP);
+    Rcpp::traits::input_parameter< int >::type diag_pheno(diag_phenoSEXP);
+    Rcpp::traits::input_parameter< int >::type EM_Fels_limit(EM_Fels_limitSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type REML(REMLSEXP);
+    Rcpp::traits::input_parameter< int >::type diag_phylo(diag_phyloSEXP);
+    __result = Rcpp::wrap(EM_Fels2008(pics, vars, phylocov, phenocov, nvar, phylocov_fixed, phenocov_fixed, is_phylocov_fixed, is_phenocov_fixed, diag_pheno, EM_Fels_limit, tol, REML, diag_phylo));
     return __result;
 END_RCPP
 }
