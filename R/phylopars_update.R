@@ -190,7 +190,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   parent_edges <- c(parent_edges,parent_edges[length(parent_edges)])-1
   
   # does a given edge number correspond to a terminal edge
-  is_edge_ind <- sapply(0:nedge,function(X) X %in% edge_ind)
+  is_edge_ind <- rep(FALSE,nedge+1)
+  is_edge_ind[which(tree$edge[,2]<=nspecies)] <- TRUE
   
   # same as above, but if data were complete
   species_subset_complete <- rep(list(1:nvar-1),nind)
@@ -333,13 +334,6 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
           pars <- numeric()
           if(is.na(phylocov_fixed)[[1]]) pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
           if(is.na(phenocov_fixed)[[1]]) pars <- c(pars,mat_to_pars(phenocov,nvar,pheno_error))
-          mu <- tp(L=X_complete, R=matrix(as.double(t(imputed$recon_ind)),ncol=1), Rmat = imputed$recon_ind,mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
-                   edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars, nvar=nvar, 
-                   phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
-                   species_subset=species_subset_complete, un_species_subset = un_species_subset_complete,subset_list=subset_list_complete,
-                   ind_list=ind_list_complete, tip_combn=tip_combn_complete,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=2,
-                   is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
-                   is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$theta
           AP <- EM_Fels2008(pics=args[[1]],vars=args[[2]],phylocov=phylocov,phenocov=phenocov,nvar=nvar,tol=em_tol,diag_pheno=as.integer(!pheno_correlated),EM_Fels_limit=EM_Fels_limit,REML=as.integer(REML),diag_phylo=as.integer(!phylo_correlated),
                             is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed)
           AP[1:nvar+nvar,1:nvar] <- AP[1:nvar+nvar,1:nvar,drop=FALSE] + imputed$tip_uncertainty/(nind-nvar)
@@ -348,7 +342,13 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
           pars <- numeric()
           if(is.na(phylocov_fixed)[[1]]) pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
           if(is.na(phenocov_fixed)[[1]]) pars <- c(pars,mat_to_pars(phenocov,nvar,pheno_error))
-          
+          mu <- tp(L=X_complete, R=matrix(as.double(t(imputed$recon_ind)),ncol=1), Rmat = imputed$recon_ind,mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
+                   edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars, nvar=nvar, 
+                   phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
+                   species_subset=species_subset_complete, un_species_subset = un_species_subset_complete,subset_list=subset_list_complete,
+                   ind_list=ind_list_complete, tip_combn=tip_combn_complete,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=2,
+                   is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                   is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$theta
           ll2 <- tp(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
                     edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars, nvar=nvar, 
                     phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
