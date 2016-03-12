@@ -3,3 +3,4 @@
 ^cran-comments.md$
 ^R\Rphylopars_main.R
 ^src\Rphylopars_rcpp.cpp
+^\*.md
