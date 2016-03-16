@@ -11,9 +11,11 @@
     * checking CRAN incoming feasibility ... NOTE
         * Maintainer: 'Eric W. Goolsby <eric.goolsby.evolution@gmail.com>'
         * Possibly mis-spelled words in DESCRIPTION:
-        Phylogenetic (3:8)
-        datasets (7:72)
-        intraspecific (7:126)
-        pPCA (7:390)
-        phylogenetic (7:35, 7:276, 7:301, 7:346)
+          Ornstein (7:341)
+          Pagel's (7:374)
+          Phylogenetic (3:8)
+          Uhlenbeck (7:350)
+          datasets (7:72)
+          intraspecific (7:126)
+          phylogenetic (7:35)
             * EXPLANATION: This spelling is correct
