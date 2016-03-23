@@ -12,6 +12,20 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   tree <- reorder(tree,"postorder")
   trait_data[,1] <- as.character(trait_data[,1])
   f_args <- as.list(environment())
+  drop_taxa <- 
+    name.check(phy = tree,data.names = unique(as.character(trait_data$species)))
+  if(length(drop_taxa)>1)
+  {
+    if(length(drop_taxa$tree_not_data)>1)
+    {
+      add_data <- data.frame(species=as.character(drop_taxa$tree_not_data),
+                             matrix(as.double(NA),length(drop_taxa$tree_not_data),ncol(trait_data)-1))
+      colnames(add_data) <- colnames(trait_data)
+      trait_data <- rbind(trait_data,add_data)
+    }
+  } 
+  drop_tree <- multi2di(tree)
+  
   if(model=="white" | model=="star") tree <- starTree(tree$tip.label,rep(1,length(tree$tip.label)))
   nvar <- ncol(trait_data)-1
   if(nvar==1 & model=="mvOU") model <- "OU"
@@ -376,7 +390,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
         pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
         mu <- matrix(colMeans(trait_data[,1:nvar+1,drop=FALSE],na.rm = TRUE))
         dat <- as.matrix(trait_data[,1:nvar+1,drop=FALSE])
-        rownames(dat) <- rownames(trait_data$species)
+        rownames(dat) <- trait_data$species
         for(i in 1:ncol(Rmat)) dat[is.na(dat[,i]),i] <- mu[i]
         mu <- tp(L=X_complete, R=as.matrix(as.double(dat)), Rmat = as.matrix(dat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
                  edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars, nvar=nvar, 
@@ -385,7 +399,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                  ind_list=ind_list_complete, tip_combn=tip_combn_complete,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=2,
                  is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
                  is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$theta
-        best_phylocov <- phylocov <- crossprod(apply(dat,2,pic,phy=multi2di(tree,random=FALSE)))/(nspecies-REML)
+        best_phylocov <- phylocov <- crossprod(apply(dat,2,pic,phy=drop_tree))/(nspecies-REML)
         
         if(!phylo_correlated) best_phylocov <- phylocov <- diag(diag(phylocov))
         pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
@@ -399,6 +413,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
         
         for(k in 1:EM_missing_limit)
         {
+          
           imputed <- tp(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
                         edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars, nvar=nvar, 
                         phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
@@ -406,9 +421,11 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                         ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=mu,ret_level=3,
                         is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
                         is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
+          
           dat <- imputed$recon_ind
-          rownames(dat) <- rownames(trait_data$species)
-          biased_sigma <- crossprod(apply(dat,2,pic,phy=multi2di(tree,random=FALSE)))/(nspecies-REML)
+          
+          rownames(dat) <- trait_data$species
+          biased_sigma <- crossprod(apply(dat,2,pic,phy=drop_tree))/(nspecies-REML)
           biased_pars <- mat_to_pars(biased_sigma,nvar,as.integer(!phylo_correlated))
           tip_un <- tp(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
                        edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=biased_pars, nvar=nvar, 
@@ -417,7 +434,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                        ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,
                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
                        is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$tip_uncertainty
-          mu <- as.matrix(apply(dat,2,function(X) ace(X,multi2di(tree,random=FALSE),method="pic")$ace[[1]]))
+          mu <- as.matrix(apply(dat,2,function(X) ace(X,drop_tree,method="pic")$ace[[1]]))
           phylocov <- biased_sigma + tip_un/(nspecies-REML)
           if(!phylo_correlated) phylocov <- diag(diag(phylocov))
           pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
@@ -428,6 +445,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                     ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
                     is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
                     is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl
+          
           if(ll2<ll)
           {
             phylocov <- best_phylocov
