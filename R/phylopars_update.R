@@ -10,6 +10,10 @@
 phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE)
 {
   tree <- reorder(tree,"postorder")
+  if(is.null(tree$node.label))
+  {
+    tree$node.label <- (length(tree$tip.label)+1):(length(tree$tip.label)+tree$Nnode)
+  }
   trait_data[,1] <- as.character(trait_data[,1])
   f_args <- as.list(environment())
   drop_taxa <- 
@@ -904,7 +908,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   
   rownames(anc_var) <- rownames(anc_recon) <- names(anc_cov) <- 1:length(anc_cov)
   rownames(anc_var)[1:nspecies] <- rownames(anc_recon)[1:nspecies] <- names(anc_cov)[1:nspecies] <- tree$tip.label
-  rownames(anc_var)[(nspecies+1):nrow(anc_var)] <- rownames(anc_recon)[(nspecies+1):nrow(anc_var)] <- names(anc_cov)[(nspecies+1):nrow(anc_var)] <- (nspecies+1):nrow(anc_var)
+  rownames(anc_var)[(nspecies+1):nrow(anc_var)] <- rownames(anc_recon)[(nspecies+1):nrow(anc_var)] <- names(anc_cov)[(nspecies+1):nrow(anc_var)] <- 
+    tree$node.label #(nspecies+1):nrow(anc_var)
   
   
   ret_list <- list(logLik=logLik,pars=pars,model=model,mu=anc_recon[nspecies+1,],npars=npars,anc_recon=anc_recon,anc_var=anc_var,anc_cov=anc_cov,tree=tree,trait_data=trait_data,REML=REML)
