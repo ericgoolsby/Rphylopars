@@ -786,10 +786,36 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
         list(ll=ll2[[1]])
       }
       
-      ret <- phylopars(trait_data=trait_data,tree=tree,pheno_error=pheno_error>0,pheno_correlated=pheno_error==2,phylo_correlated=phylo_correlated,
+      ret <- phylopars(trait_data=trait_data,tree=tree,model="OU",pheno_error=pheno_error>0,pheno_correlated=pheno_error==2,phylo_correlated=phylo_correlated,
                        REML=REML,EM_Fels_limit=EM_Fels_limit,repeat_optim_limit=repeat_optim_limit,EM_missing_limit=EM_missing_limit,repeat_optim_tol=repeat_optim_tol,phylocov_start=phylocov_start,
                        phenocov_start=phenocov_start,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,skip_optim=skip_optim,skip_EM=skip_EM,EM_verbose=EM_verbose,optim_verbose=optim_verbose)
-      phylocov <- ret$pars[[1]]
+      alpha <- diag(x = ret$model$alpha,nrow = nvar)
+      #phylocov <- ret$pars[[1]]
+      
+      tr_a <- tr_b <- tr_c <- tree
+      SIGMA <- matrix(0,nvar,nvar)
+      for(a in 1:nvar)
+      {
+        for(b in 1:nvar)
+        {
+          i <- j <- a
+          tr_a$edge.length <- 
+            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(alpha[i,i]+alpha[j,j])/2))$
+                       tree,"postorder")$edge.length)#*sigma[i,j]#/(alpha[i,i]+alpha[j,j]))
+          i <- j <- b
+          tr_b$edge.length <- 
+            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(alpha[i,i]+alpha[j,j])/2))$
+                       tree,"postorder")$edge.length)#*sigma[i,j]#/(alpha[i,i]+alpha[j,j]))
+          i <- a
+          j <- b
+          tr_c$edge.length <- 
+            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(alpha[i,i]+alpha[j,j])/2))$
+                       tree,"postorder")$edge.length)#*sigma[i,j]#/(alpha[i,i]+alpha[j,j]))
+          SIGMA[a,b] <- three.point.compute(phy = tr_c,ret$anc_recon[1:nspecies,i]-ace(ret$anc_recon[1:nspecies,i],tr_a,method="pic")$ace[[1]],ret$anc_recon[1:nspecies,j]-ace(ret$anc_recon[1:nspecies,j],tr_b,method="pic")$ace[[1]])$QP/length(tree$tip.label)*(alpha[i,i]+alpha[j,j])
+        }
+      }
+      phylocov <- SIGMA
+      
       if(pheno_error!=0) phenocov <- ret$pars[[2]]
       mu <- ret$mu
       
@@ -803,7 +829,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       
       if(is.na(model_par_start)[[1]] & is.na(model_par_fixed)[[1]])
       {
-        pars[alpha_pars] <- mat_to_pars(diag(nvar),nvar,diag = abs(full_alpha-1))
+        #pars[alpha_pars] <- mat_to_pars(diag(nvar),nvar,diag = abs(full_alpha-1))
+        pars[alpha_pars] <- mat_to_pars(alpha,nvar,diag=abs(full_alpha-1))
       } else if(!is.na(model_par_start)[[1]])
       {
         pars[alpha_pars] <- mat_to_pars(model_par_start,nvar,diag = abs(full_alpha-1))
