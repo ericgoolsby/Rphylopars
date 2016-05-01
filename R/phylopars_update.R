@@ -9,6 +9,8 @@
 # model_par_evals <- 10
 phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE)
 {
+  tree <- tree[c("edge","tip.label","edge.length","Nnode")]
+  class(tree) <- "phylo"
   tree <- reorder(tree,"postorder")
   if(is.null(tree$node.label))
   {
@@ -30,21 +32,32 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   } 
   drop_tree <- multi2di(tree)
   
-  if(model=="white" | model=="star") tree <- starTree(tree$tip.label,rep(1,length(tree$tip.label)))
+  if(model=="white" | model=="star") tree <- reorder(rescale(tree,model="white")(1),"postorder")
   nvar <- ncol(trait_data)-1
   if(nvar==1 & model=="mvOU") model <- "OU"
   
   height <- mean(pruningwise.distFromRoot((tree)))
   if(model=="lambda")
-    par_bounds <- seq(0,1,length=model_par_evals) else
-      if(model=="kappa")
-        par_bounds <- seq(0,3,length=model_par_evals) else
-          if(model=="delta")
-            par_bounds <- seq(10^(-7)/height,3/height,length=model_par_evals) else
-              if(model=="OU")
-                par_bounds <- seq(10^(-7)/height,50/height,length=model_par_evals) else
-                  if(model=="EB")
-                    par_bounds <- seq(-3/height,0,length=model_par_evals)
+  {
+    par_bounds <- seq(0,1,length=model_par_evals)
+    MOD_PAR_START <- .5
+  } else if(model=="kappa")
+  {
+    par_bounds <- seq(0,3,length=model_par_evals)
+    MOD_PAR_START <- .5
+  } else if(model=="delta")
+  {
+    par_bounds <- seq(10^(-7)/height,3/height,length=model_par_evals)
+    MOD_PAR_START <- .5
+  }  else if(model=="OU" | model=="mvOU")
+  {
+    par_bounds <- seq(10^(-7)/height,50/height,length=model_par_evals) 
+    MOD_PAR_START <- .5/height
+  } else if(model=="EB")
+  {
+    par_bounds <- seq(-3/height,0,length=model_par_evals)
+    MOD_PAR_START <- -1/height
+  }
   
   evec <- function(bounds)
   {
@@ -490,7 +503,9 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       tedge_vec <- edge_vec
       # numerical optimization
       ll <- ll2[[1]]
-      if(!nested_optim & (model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta")) MOD_PAR <- -log(-(-max(par_bounds)+mean(par_bounds))/(-min(par_bounds)+mean(par_bounds)))
+      if(!is.na(model_par_start)[[1]]) MOD_PAR_START <- model_par_start else
+        if(!is.na(model_par_fixed)[[1]]) MOD_PAR_START <- model_par_start
+      if(!nested_optim & (model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta")) MOD_PAR <- -log(-(-max(par_bounds)+MOD_PAR_START)/(-min(par_bounds)+MOD_PAR_START))
       if((complete_data & (model!="BM" & model!="white" & model!="star" & is.na(model_par_fixed[[1]]))) | pheno_error | !complete_data)
         for(i in 1:repeat_optim_limit)
         {
@@ -789,7 +804,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       ret <- phylopars(trait_data=trait_data,tree=tree,model="OU",pheno_error=pheno_error>0,pheno_correlated=pheno_error==2,phylo_correlated=phylo_correlated,
                        REML=REML,EM_Fels_limit=EM_Fels_limit,repeat_optim_limit=repeat_optim_limit,EM_missing_limit=EM_missing_limit,repeat_optim_tol=repeat_optim_tol,phylocov_start=phylocov_start,
                        phenocov_start=phenocov_start,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,skip_optim=skip_optim,skip_EM=skip_EM,EM_verbose=EM_verbose,optim_verbose=optim_verbose)
-      alpha <- diag(x = ret$model$alpha,nrow = nvar)
+      ALPHA <- diag(x = ret$model$alpha + max(c(min(par_bounds),min(c(.001,max(par_bounds))))),nrow = nvar)
       #phylocov <- ret$pars[[1]]
       
       tr_a <- tr_b <- tr_c <- tree
@@ -800,18 +815,18 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
         {
           i <- j <- a
           tr_a$edge.length <- 
-            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(alpha[i,i]+alpha[j,j])/2))$
+            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(ALPHA[i,i]+ALPHA[j,j])/2))$
                        tree,"postorder")$edge.length)#*sigma[i,j]#/(alpha[i,i]+alpha[j,j]))
           i <- j <- b
           tr_b$edge.length <- 
-            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(alpha[i,i]+alpha[j,j])/2))$
+            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(ALPHA[i,i]+ALPHA[j,j])/2))$
                        tree,"postorder")$edge.length)#*sigma[i,j]#/(alpha[i,i]+alpha[j,j]))
           i <- a
           j <- b
           tr_c$edge.length <- 
-            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(alpha[i,i]+alpha[j,j])/2))$
+            (reorder(transf.branch.lengths(tree,model="OUfixedRoot",parameters = list(alpha=(ALPHA[i,i]+ALPHA[j,j])/2))$
                        tree,"postorder")$edge.length)#*sigma[i,j]#/(alpha[i,i]+alpha[j,j]))
-          SIGMA[a,b] <- three.point.compute(phy = tr_c,ret$anc_recon[1:nspecies,i]-ace(ret$anc_recon[1:nspecies,i],tr_a,method="pic")$ace[[1]],ret$anc_recon[1:nspecies,j]-ace(ret$anc_recon[1:nspecies,j],tr_b,method="pic")$ace[[1]])$QP/length(tree$tip.label)*(alpha[i,i]+alpha[j,j])
+          SIGMA[a,b] <- three.point.compute(phy = tr_c,ret$anc_recon[1:nspecies,i]-ace(ret$anc_recon[1:nspecies,i],tr_a,method="pic")$ace[[1]],ret$anc_recon[1:nspecies,j]-ace(ret$anc_recon[1:nspecies,j],tr_b,method="pic")$ace[[1]])$QP/length(tree$tip.label)*(ALPHA[i,i]+ALPHA[j,j])
         }
       }
       phylocov <- SIGMA
@@ -830,7 +845,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       if(is.na(model_par_start)[[1]] & is.na(model_par_fixed)[[1]])
       {
         #pars[alpha_pars] <- mat_to_pars(diag(nvar),nvar,diag = abs(full_alpha-1))
-        pars[alpha_pars] <- mat_to_pars(alpha,nvar,diag=abs(full_alpha-1))
+        pars[alpha_pars] <- mat_to_pars(ALPHA,nvar,diag=abs(full_alpha-1))
       } else if(!is.na(model_par_start)[[1]])
       {
         pars[alpha_pars] <- mat_to_pars(model_par_start,nvar,diag = abs(full_alpha-1))
@@ -860,7 +875,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
         if(is.na(ll)) ll <- BM_ll - max_delta
         if(abs(abs(BM_ll)-abs(ll[[1]]))>max_delta) ll <- BM_ll - max_delta
         ll[[1]]
-      },control=list(fnscale=-1),method="BFGS",BM_ll=zBM_ll,R=zR,Rmat=zRmat,phylocov_fixed=zphylocov_fixed,phenocov_fixed=zphenocov_fixed)
+      },control=list(fnscale=-1),BM_ll=zBM_ll,R=zR,Rmat=zRmat,phylocov_fixed=zphylocov_fixed,phenocov_fixed=zphenocov_fixed)
       if(is.na(phylocov_fixed)[[1]]) phylocov2 <- pars_to_mat(o$par[phylocov_pars],nvar,as.integer(!phylo_correlated)) else phylocov2 <- zphylocov_fixed
       if(is.na(phenocov_fixed)[[1]]) if(pheno_error>0) phenocov2 <- pars_to_mat(o$par[phenocov_pars],nvar,pheno_error) else phenocov2 <- zphenocov_fixed
       if(is.na(model_par_fixed)[[1]]) alpha <- pars_to_mat(o$par[alpha_pars],nvar,diag = abs(full_alpha-1))
@@ -901,11 +916,11 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       #ll2 <- list(ll=ll2$logl,phylocov=phylocov,phenocov=phenocov,mu=ll2[[2]],pars=pars,ll2=ll2,alpha=alpha)
     }
   npars <- 0
-  dimnames(ll2$phylocov) <- dimnames(ll2$phenocov) <- list(colnames(trait_data)[1:nvar+1],colnames(trait_data)[1:nvar+1])
+  dimnames(ll2$phylocov) <- list(colnames(trait_data)[1:nvar+1],colnames(trait_data)[1:nvar+1])
   if(phylo_correlated) npars <- ((nvar^2-nvar)/2+nvar) else npars <- nvar
+  if(pheno_error != 0) dimnames(ll2$phenocov) <- dimnames(ll2$phylocov)
   if(pheno_error==1) npars <- npars + nvar else if (pheno_error==2) npars <- npars + ((nvar^2-nvar)/2+nvar)
   if(pheno_error==0) pars <- list(phylocov=ll2$phylocov) else pars <- list(phylocov=ll2$phylocov,phenocov=ll2$phenocov)
-  
   if(model=="mvOU")
   {
     dimnames(alpha) <- list(colnames(trait_data)[1:nvar+1],colnames(trait_data)[1:nvar+1])
@@ -1047,7 +1062,6 @@ postorder_tools <- function(tree)
   edges <- edges[tree$edge[,2],c(1,2,3)] # sort the edge_mat in postorder, and remove root edge
   list(edge_mat=edges,des_order=new_des_order)
 }
-
 
 getHeights <- function(tree) # identical to phylolm::pruningwise.distFromRoot
 {
