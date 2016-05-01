@@ -20,7 +20,12 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   if(missing(tree))
   {
     tree <- pbtree(n=ntaxa)
-  } else ntaxa <- length(tree$tip.label)
+  } else
+  {
+    tree <- tree[c("edge","tip.label","edge.length","Nnode")]
+    class(tree) <- "phylo"
+    ntaxa <- length(tree$tip.label)
+  }
   tree <- reorder(tree,"postorder")
   perm_tree <- tree
   if(model!="BM") tree <- transf.branch.lengths(phy = tree,model = model,parameters = parameters)$tree
