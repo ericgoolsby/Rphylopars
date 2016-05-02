@@ -806,6 +806,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                        REML=REML,EM_Fels_limit=EM_Fels_limit,repeat_optim_limit=repeat_optim_limit,EM_missing_limit=EM_missing_limit,repeat_optim_tol=repeat_optim_tol,phylocov_start=phylocov_start,
                        phenocov_start=phenocov_start,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,skip_optim=skip_optim,skip_EM=skip_EM,EM_verbose=EM_verbose,optim_verbose=optim_verbose)
       ALPHA <- diag(x = ret$model$alpha + max(c(min(par_bounds),min(c(.001,max(par_bounds))))),nrow = nvar)
+      ALPHA[ALPHA>max(par_bounds)] <- max(par_bounds)
       #phylocov <- ret$pars[[1]]
       
       tr_a <- tr_b <- tr_c <- tree
