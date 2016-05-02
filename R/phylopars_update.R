@@ -12,6 +12,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   tree <- tree[c("edge","tip.label","edge.length","Nnode")]
   class(tree) <- "phylo"
   tree <- reorder(tree,"postorder")
+  if(model=="white" | model=="star") tree <- reorder(rescale(tree,model="lambda",lambda=0),"postorder")
+  
   if(is.null(tree$node.label))
   {
     tree$node.label <- (length(tree$tip.label)+1):(length(tree$tip.label)+tree$Nnode)
@@ -32,7 +34,6 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   } 
   drop_tree <- multi2di(tree)
   
-  if(model=="white" | model=="star") tree <- reorder(rescale(tree,model="white")(1),"postorder")
   nvar <- ncol(trait_data)-1
   if(nvar==1 & model=="mvOU") model <- "OU"
   
