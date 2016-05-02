@@ -16,6 +16,7 @@ convert_to_means <- function(df,index_col = 1,sort_vec,FUN = function(X) mean(X,
 
 simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspecific,model="BM",parameters,nsim=1,return.type="data.frame")
 {
+  if(model=="OU") model <- "OUfixedRoot"
   if(nmissing>(ntaxa*ntraits*nreps)) nmissing <- round(runif(1,ntaxa*ntraits*nreps-1))
   if(missing(tree))
   {
@@ -58,8 +59,8 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   colnames(Xall) <- paste("V",1:ntraits,sep="")
   if(nreps==1 & nmissing==0 & nsim==1)
   {
-    if(return.type=="matrix") return(list(trait_data=Xall[,,1],tree=perm_tree,sim_tree=tree)) else
-      return(list(trait_data=data.frame(species=rownames(Xall[,,1]),Xall[,,1]),tree=perm_tree,sim_tree=tree))
+    if(return.type=="matrix") return(list(trait_data=Xall[,,1,drop=FALSE],tree=perm_tree,sim_tree=tree)) else
+      return(list(trait_data=data.frame(species=rownames(Xall[,,1,drop=FALSE]),Xall[,,1,drop=FALSE]),tree=perm_tree,sim_tree=tree))
   } else if(nreps==1 & nmissing==0) 
   {
     if(return.type=="matrix")

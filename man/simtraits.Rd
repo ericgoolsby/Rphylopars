@@ -49,8 +49,10 @@ Default is "data.frame". Can also specify "matrix" if nreps=1.
 }
 }
 \value{
-\item{data}{Data for \code{phylopars()}}
-\item{tree}{Tree for \code{phylopars()}}
+\item{trait_data}{Data for \code{phylopars()}}
+\item{tree}{The original phylogenetic tree (either provided to the function or generated internally)}
+\item{sim_tree}{The transformed tree on which trait simulations were performed (identical to tree if model="BM")}
+\item{original_X}{If within-species variation is simulated, original_X is the original species mean values before adding within-species variation.}
 }
 \references{
 Bruggeman J, Heringa J and Brandt BW. (2009) PhyloPars: estimation of missing parameter values using phylogeny. \emph{Nucleic Acids Research} 37: W179-W184.
