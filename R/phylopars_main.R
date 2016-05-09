@@ -48,26 +48,31 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   if(length(intraspecific)==1)
   {
     opt <- 1
-    intraspecific <- matrix(rep(intraspecific,ntraits*ntaxa),nrow = ntaxa,ncol = ntraits)
+    #intraspecific <- matrix(rep(intraspecific,ntraits*ntaxa),nrow = ntaxa,ncol = ntraits)
+    intraspecific <- diag(rep(intraspecific,ntraits),nrow = ntraits)
   } else if(length(intraspecific)==ntraits)
   {
     opt <- 2
-    intraspecific <- t(matrix(rep(intraspecific,ntaxa),nrow=ntraits))
-  } else opt <- 3
+    #intraspecific <- t(matrix(rep(intraspecific,ntaxa),nrow=ntraits))
+    intraspecific <- diag(intraspecific,nrow = ntraits)
+  } else
+  {
+    opt <- 3
+  }
   anc_mat <- matrix(1,ntaxa) %*% anc
   Xall <- sim.char(phy = tree,par = v,nsim = nsim)
   colnames(Xall) <- paste("V",1:ntraits,sep="")
   if(nreps==1 & nmissing==0 & nsim==1)
   {
-    if(return.type=="matrix") return(list(trait_data=Xall[,,1,drop=FALSE],tree=perm_tree,sim_tree=tree)) else
-      return(list(trait_data=data.frame(species=rownames(Xall[,,1,drop=FALSE]),Xall[,,1,drop=FALSE]),tree=perm_tree,sim_tree=tree))
+    if(return.type=="matrix") return(list(trait_data=Xall[,,1,drop=FALSE],tree=perm_tree,sim_tree=tree,original_X=Xall[,,1,drop=FALSE])) else
+      return(list(trait_data=data.frame(species=rownames(Xall[,,1,drop=FALSE]),Xall[,,1,drop=FALSE]),tree=perm_tree,sim_tree=tree,original_X=trait_data))
   } else if(nreps==1 & nmissing==0) 
   {
     if(return.type=="matrix")
     {
-      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]]),tree=perm_tree,sim_tree=tree))
+      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]]),tree=perm_tree,sim_tree=tree,original_X=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]])))
     } else
-      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) data.frame(species=rownames(X[[1]]),X[[1]])),tree=perm_tree,sim_tree=tree))
+      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) data.frame(species=rownames(X[[1]]),X[[1]])),tree=perm_tree,sim_tree=tree,original_X=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]])))
   }
   
   X <- original_X <- rep(list(matrix(0,ntaxa*nreps,ntraits)),nsim)
@@ -79,10 +84,13 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
       X[[j]][1:(ntraits*ntaxa)] <- original_X[[j]][1:(ntraits*ntaxa)] <- Xall[,,j]
     } else
     {
+      simdat_j <- t(apply(Xall[,,j],1,function(X) mvrnorm(n = nreps,mu = X,Sigma = intraspecific)))
+      original_X[[j]] <- Xall[,,j]
       for(jj in 1:nreps)
       {
-        original_X[[j]] <- Xall[,,j]
-        X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- rnorm(n = ntraits*ntaxa,mean = Xall[,,j],sd = intraspecific)
+        #X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- rnorm(n = ntraits*ntaxa,mean = Xall[,,j],sd = intraspecific)
+        X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- simdat_j[,1:ntraits*jj]
+        #return(X)
       }
     }
     X[[j]][sample(1:length(X[[j]]),nmissing)] <- NA
