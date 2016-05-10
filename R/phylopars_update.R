@@ -1226,7 +1226,7 @@ print.phylopars <- function(x, ...)
     featuremean <- featuresum/featurecount
     feature2sum <- unlist(lapply(xs,function(X) mean(sum(X^2),na.rm=TRUE)))
     featurevar <- feature2sum/featurecount - featuremean^2
-    cat("\n% variance explained by phlogeny\n")
+    cat("\n% variance explained by phylogeny\n")
     percent_var <- (1-diag(PPE$pars[[2]])/featurevar)*100
     names(percent_var) <- colnames(PPE$pars[[1]])
     print(percent_var)
@@ -1235,7 +1235,7 @@ print.phylopars <- function(x, ...)
   
   if(length(PPE$model)>1)
   {
-    cat(paste("",PPE$model[[1]],names(PPE$model)[2]," = "))
+    cat(paste("",PPE$model[[1]],if(names(PPE$model)[2]!="lambda" & names(PPE$model)[2]!="delta" & names(PPE$model)[2]!="kappa") paste(" ",names(PPE$model)[2],sep="")," = ",sep=""))
     if(PPE$model[[1]]!="mvOU") cat((PPE$model[[2]])) else
     {
       cat("\n")
@@ -1258,7 +1258,7 @@ summary.phylopars <- function(object, ...)
   PPE <- object
   if(length(PPE$model)>1)
   {
-    cat(paste("",PPE$model[[1]],names(PPE$model)[2]," = "))
+    cat(paste("",PPE$model[[1]],if(names(PPE$model)[2]!="lambda" & names(PPE$model)[2]!="delta" & names(PPE$model)[2]!="kappa") paste(" ",names(PPE$model)[2],sep="")," = ",sep=""))
     if(PPE$model[[1]]!="mvOU") cat((PPE$model[[2]])) else
     {
       cat("\n")
