@@ -1217,17 +1217,8 @@ print.phylopars <- function(x, ...)
     print(PPE$pars[[2]])
     
     nvar <- ncol(PPE$pars[[1]])
-    xs <- as.list(PPE$trait_data[,1:nvar+1,drop=FALSE])
-    finite <- lapply(xs,is.finite)
-    xs <- lapply(xs,function(X) X[is.finite(X)])
-    
-    featurecount <- unlist(lapply(xs,length))
-    featuresum <- unlist(lapply(xs,function(X) mean(sum(X),na.rm=TRUE)))
-    featuremean <- featuresum/featurecount
-    feature2sum <- unlist(lapply(xs,function(X) mean(sum(X^2),na.rm=TRUE)))
-    featurevar <- feature2sum/featurecount - featuremean^2
     cat("\n% variance explained by phylogeny\n")
-    percent_var <- (1-diag(PPE$pars[[2]])/featurevar)*100
+    percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1],2,function(X) var(X,na.rm=TRUE)))*100
     names(percent_var) <- colnames(PPE$pars[[1]])
     print(percent_var)
     
@@ -1273,15 +1264,8 @@ summary.phylopars <- function(object, ...)
   ret[,2] <- round(sqrt(diag(PPE$pars[[1]])),4)
   ret[,3] <- round(sqrt(diag(PPE$pars[[2]])),4)
   nvar <- ncol(PPE$pars[[1]])
-  xs <- as.list(PPE$trait_data[,1:nvar+1,drop=FALSE])
-  finite <- lapply(xs,is.finite)
-  xs <- lapply(xs,function(X) X[is.finite(X)])  
-  featurecount <- unlist(lapply(xs,length))
-  featuresum <- unlist(lapply(xs,function(X) mean(sum(X),na.rm=TRUE)))
-  featuremean <- featuresum/featurecount
-  feature2sum <- unlist(lapply(xs,function(X) mean(sum(X^2),na.rm=TRUE)))
-  featurevar <- feature2sum/featurecount - featuremean^2
-  percent_var <- (1-diag(PPE$pars[[2]])/featurevar)*100
+  percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1],2,function(X) var(X,na.rm=TRUE)))*100
+  names(percent_var) <- colnames(PPE$pars[[1]])
   ret[,4] <- round(percent_var,2)
   ret
 }
