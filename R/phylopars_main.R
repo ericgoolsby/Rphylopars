@@ -65,7 +65,7 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   if(nreps==1 & nmissing==0 & nsim==1)
   {
     if(return.type=="matrix") return(list(trait_data=Xall[,,1,drop=FALSE],tree=perm_tree,sim_tree=tree,original_X=Xall[,,1,drop=FALSE])) else
-      return(list(trait_data=data.frame(species=rownames(Xall[,,1,drop=FALSE]),Xall[,,1,drop=FALSE]),tree=perm_tree,sim_tree=tree,original_X=trait_data))
+      return(list(trait_data=data.frame(species=rownames(Xall[,,1,drop=FALSE]),Xall[,,1,drop=FALSE]),tree=perm_tree,sim_tree=tree,original_X=Xall[,,1,drop=FALSE]))
   } else if(nreps==1 & nmissing==0) 
   {
     if(return.type=="matrix")
