@@ -17,13 +17,16 @@ importFrom("stats", "cutree", "dist", "dnorm", "hclust", "na.omit", "rnorm", "ru
              "reorder", "setNames", "terms", "var")
 importFrom("utils", "compareVersion", "head", "write.table")
 export(
+anc.recon,
 anova.phylopars.lm,
+fast.SSC,
 logLik.phylopars,
 logLik.phylopars.lm,
 phylopars,
 phylopars.lm,
 print.phylopars,
 print.phylopars.lm,
+print.SSC,
 summary.phylopars,
 summary.phylopars.lm,
 write.phylopars,
@@ -35,5 +38,6 @@ S3method(logLik, phylopars)
 S3method(logLik, phylopars.lm)
 S3method(print, phylopars)
 S3method(print, phylopars.lm)
+S3method(print, SSC)
 S3method(summary, phylopars)
 S3method(summary, phylopars.lm)

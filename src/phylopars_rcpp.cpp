@@ -4,6 +4,118 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
+List C_anc_recon(arma::mat Y,arma::vec anc,arma::vec des,arma::vec edge_vec,int nedge,int nvar,int nspecies)
+{
+  arma::vec p = arma::zeros(nedge+1);
+  arma::mat Yhat = arma::zeros(nedge+1,nvar);
+
+  int i=0;
+  int anc_edge=0;
+  int des_edge=0;
+  double pA=0;
+  double len=0;
+  for(i=0;i<nedge;i++)
+  {
+    anc_edge = anc(i)-1;
+    des_edge = des(i)-1;
+    len = edge_vec(i);
+    
+    if(des_edge<nspecies)
+    {
+      p(des_edge) = 1/len;
+      Yhat.row(des_edge) = Y.row(des_edge);
+    } else
+    {
+      pA = p(des_edge);
+      Yhat.row(des_edge) = Yhat.row(des_edge)/pA;
+      p(des_edge) = pA/(1+len*pA);
+    }
+    p(anc_edge) += p(des_edge);
+    Yhat.row(anc_edge) += Yhat.row(des_edge)*p(des_edge);
+  }
+  Yhat.row(anc_edge) = Yhat.row(anc_edge)/p(anc_edge);
+  
+  for(i=nedge-1;i>=0;i--)
+  {
+    anc_edge = anc(i)-1;
+    des_edge = des(i)-1;
+    len = edge_vec(i);
+    
+    if(des_edge>=nspecies)
+    {
+      Yhat.row(des_edge) = Yhat.row(des_edge)*p(des_edge)*len + Yhat.row(anc_edge) - Yhat.row(anc_edge)*p(des_edge)*len;
+      p(des_edge) = p(des_edge)/(1-len*p(des_edge)) + (p(anc_edge)-p(des_edge))/(1+len*(p(anc_edge)-p(des_edge)));
+    } else
+    {
+      p(des_edge) = 0;
+    }
+  }
+  return List::create(_["Yhat"] = Yhat,_["p"] = p);
+}
+
+
+// [[Rcpp::export]]
+List C_anc_recon_rates(arma::mat Y,arma::vec anc,arma::vec des,arma::vec edge_vec,int nedge,int nvar,int nspecies,int REML)
+{
+  arma::vec p = arma::zeros(nedge+1);
+  arma::mat Yhat = arma::zeros(nedge+1,nvar);
+  arma::mat XY = arma::zeros(nedge+1,nvar);
+  arma::mat YY = arma::zeros(nvar*(nedge+1),nvar);
+  
+  int i=0;
+  int anc_edge=0;
+  int des_edge=0;
+  double pA=0;
+  double len=0;
+  for(i=0;i<nedge;i++)
+  {
+    anc_edge = anc(i)-1;
+    des_edge = des(i)-1;
+    len = edge_vec(i);
+    
+    if(des_edge<nspecies)
+    {
+      p(des_edge) = 1/len;
+      Yhat.row(des_edge) = Y.row(des_edge);
+      XY.row(des_edge) = Y.row(des_edge)/len;
+      YY.rows(des_edge*nvar,nvar+(des_edge*nvar)-1) = trans(Y.row(des_edge))*Y.row(des_edge)/len;
+    } else
+    {
+      pA = p(des_edge);
+      Yhat.row(des_edge) = Yhat.row(des_edge)/pA;
+      YY.rows(des_edge*nvar,nvar+(des_edge*nvar)-1) = YY.rows(des_edge*nvar,nvar+(des_edge*nvar)-1) -
+        trans(XY.row(des_edge))*XY.row(des_edge)*len/(1+len*pA);
+      XY.row(des_edge) = XY.row(des_edge)/(1+len*pA);
+      p(des_edge) = pA/(1+len*pA);
+    }
+    p(anc_edge) += p(des_edge);
+    Yhat.row(anc_edge) += Yhat.row(des_edge)*p(des_edge);
+    XY.row(anc_edge) += XY.row(des_edge);
+    YY.rows(anc_edge*nvar,nvar+(anc_edge*nvar)-1) += YY.rows(des_edge*nvar,nvar+(des_edge*nvar)-1);
+  }
+  Yhat.row(anc_edge) = Yhat.row(anc_edge)/p(anc_edge);
+  arma::mat Sigma = (YY.rows(anc_edge*nvar,nvar+(anc_edge*nvar)-1) - 
+    2*(trans(Yhat.row(anc_edge))*XY.row(anc_edge)) + trans(Yhat.row(anc_edge))*Yhat.row(anc_edge)*p(anc_edge))/(nspecies-REML);
+  for(i=nedge-1;i>=0;i--)
+  {
+    anc_edge = anc(i)-1;
+    des_edge = des(i)-1;
+    len = edge_vec(i);
+    
+    if(des_edge>=nspecies)
+    {
+      Yhat.row(des_edge) = Yhat.row(des_edge)*p(des_edge)*len + Yhat.row(anc_edge) - Yhat.row(anc_edge)*p(des_edge)*len;
+      p(des_edge) = p(des_edge)/(1-len*p(des_edge)) + (p(anc_edge)-p(des_edge))/(1+len*(p(anc_edge)-p(des_edge)));
+    } else
+    {
+      p(des_edge) = 0;
+    }
+  }
+  
+  return List::create(_["Yhat"] = Yhat,_["p"] = p,_["Sigma"] = Sigma);
+}
+
+// [[Rcpp::export]]
 arma::mat try_inv(arma::mat M,int nvar)
 {
   arma::mat Minv;
