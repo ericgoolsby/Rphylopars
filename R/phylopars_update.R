@@ -7,6 +7,120 @@
 # EM_missing_limit <- 50
 # repeat_optim_tol <- 1e-2
 # model_par_evals <- 10
+
+anc.recon <- function(trait_data, tree, vars = FALSE, CI = FALSE)
+{
+  tree <- tree[c("edge","tip.label","edge.length","Nnode")]
+  class(tree) <- "phylo"
+  tree <- reorder(tree,"postorder")
+  if(is.null(tree$node.label))
+  {
+    tree$node.label <- (length(tree$tip.label)+1):(length(tree$tip.label)+tree$Nnode)
+  }
+  if(class(trait_data)=="numeric")
+  {
+    if(is.null(names(trait_data))) names(trait_data) <- as.character(tree$tip.label)
+    trait_data <- as.matrix(trait_data)
+  } else if(class(trait_data)=="data.frame")
+  {
+    if(any(grepl("species",colnames(trait_data),ignore.case = TRUE)))
+    {
+      rownames(trait_data) <- as.character(trait_data[,grep("species",colnames(trait_data),ignore.case = TRUE)[1]])
+      trait_data <- trait_data[,-grep("species",colnames(trait_data),ignore.case = TRUE)[1]]
+    }
+    trait_data <- as.matrix(trait_data)
+  }
+  if(is.null(rownames(trait_data))) rownames(trait_data) <- tree$tip.label
+  trait_data <- trait_data[tree$tip.label,,drop=FALSE]
+  ret <- C_anc_recon(Y=trait_data,anc=tree$edge[,1],des=tree$edge[,2],edge_vec=tree$edge.length,nedge=nrow(tree$edge),nvar=ncol(trait_data),nspecies=length(tree$tip.label))
+  Yhat <- ret$Yhat[-(1:length(tree$tip.label)),,drop=FALSE]
+  rownames(Yhat) <- tree$node.label
+  if(!is.null(colnames(trait_data))) colnames(Yhat) <- colnames(trait_data) else colnames(Yhat) <- paste("V",1:ncol(trait_data),sep="")
+  if(vars || CI)
+  {
+    p <- ret$p[-(1:length(tree$tip.label))]
+    sigma <- colMeans(apply(trait_data,2,pic,phy=tree)^2)
+    var <- matrix(1/p) %*% (sigma)
+    rownames(var) <- tree$node.label
+    colnames(var) <- colnames(Yhat)
+    if(CI)
+    {
+      lower <- Yhat + qnorm(.975)*var
+      upper <- Yhat - qnorm(.975)*var
+      rownames(lower) <- rownames(upper) <- tree$node.label
+      colnames(lower) <- colnames(upper) <- colnames(Yhat)
+    }
+  }
+  if((!vars & !CI)) return(Yhat) else if(!CI) return(list(Yhat=Yhat,vars=var)) else 
+    if(!vars) return(list(Yhat=Yhat,lowerCI=lower,upperCI=upper)) else
+      return(list(Yhat=Yhat,vars=var,lowerCI=lower,upperCI=upper))
+}
+
+fast.SSC <- function(trait_data,tree,niter=1000)
+{
+  tree <- tree[c("edge","tip.label","edge.length","Nnode")]
+  class(tree) <- "phylo"
+  tree <- reorder(tree,"postorder")
+  nspecies <- length(tree$tip.label)
+  if(is.null(tree$node.label))
+  {
+    tree$node.label <- (nspecies+1):(nspecies+tree$Nnode)
+  }
+  if(class(trait_data)=="numeric")
+  {
+    if(is.null(names(trait_data))) names(trait_data) <- as.character(tree$tip.label)
+    trait_data <- as.matrix(trait_data)
+  } else if(class(trait_data)=="data.frame")
+  {
+    if(any(grepl("species",colnames(trait_data),ignore.case = TRUE)))
+    {
+      rownames(trait_data) <- as.character(trait_data[,grep("species",colnames(trait_data),ignore.case = TRUE)[1]])
+      trait_data <- trait_data[,-grep("species",colnames(trait_data),ignore.case = TRUE)[1]]
+    }
+    trait_data <- as.matrix(trait_data)
+  }
+  if(is.null(rownames(trait_data))) rownames(trait_data) <- tree$tip.label
+  trait_data <- trait_data[tree$tip.label,,drop=FALSE]
+  
+  ret <- anc.recon(trait_data = trait_data,tree = tree,vars=TRUE)
+  Yhat <- ret$Yhat
+  vars <- rbind(trait_data*0,ret$vars)*(nspecies-1)/nspecies
+  SSC <- sum((rbind(trait_data,Yhat)[tree$edge[,2],] - rbind(trait_data,Yhat)[tree$edge[,1],])^2)
+  
+  pval <- 0
+  
+  for(i in 1:niter)
+  {
+    Y.r <- trait_data[sample(nspecies),,drop=FALSE]
+    ret.r <- C_anc_recon(Y=Y.r,anc=tree$edge[,1],des=tree$edge[,2],edge_vec=tree$edge.length,nedge=nrow(tree$edge),nvar=ncol(trait_data),nspecies=nspecies)
+    Yhat.r <- ret.r$Yhat[-(1:nspecies),,drop=FALSE]
+    SSC.r <- sum((rbind(Y.r,Yhat.r)[tree$edge[,2],] - rbind(Y.r,Yhat.r)[tree$edge[,1],])^2)
+    if(SSC.r<=SSC) pval <- pval + 1
+  }
+  pval <- pval/niter
+  exp_var <- sum(vars[tree$edge[,1],] + vars[tree$edge[,2],])
+  scaled <- SSC/exp_var
+  results <- list(pvalue=pval,scaled.SSC=scaled,SSC=SSC)
+  class(results) <- "SSC"
+  results
+}
+
+print.SSC <- function(x, ...)
+{
+  cat("Total sum of squared changes (SSC)\n")
+  cat(x$SSC)
+  cat("\n\n")
+  
+  cat("Scaled sum of squared changes\n")
+  cat(x$scaled.SSC)
+  cat("\n\n")
+  
+  cat("P value\n")
+  cat(round(x$pvalue,4))
+  cat("\n\n")
+}
+
+
 phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE)
 {
   tree <- tree[c("edge","tip.label","edge.length","Nnode")]

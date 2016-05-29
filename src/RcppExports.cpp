@@ -6,6 +6,41 @@
 
 using namespace Rcpp;
 
+// C_anc_recon
+List C_anc_recon(arma::mat Y, arma::vec anc, arma::vec des, arma::vec edge_vec, int nedge, int nvar, int nspecies);
+RcppExport SEXP Rphylopars_C_anc_recon(SEXP YSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP edge_vecSEXP, SEXP nedgeSEXP, SEXP nvarSEXP, SEXP nspeciesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type anc(ancSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type des(desSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type edge_vec(edge_vecSEXP);
+    Rcpp::traits::input_parameter< int >::type nedge(nedgeSEXP);
+    Rcpp::traits::input_parameter< int >::type nvar(nvarSEXP);
+    Rcpp::traits::input_parameter< int >::type nspecies(nspeciesSEXP);
+    __result = Rcpp::wrap(C_anc_recon(Y, anc, des, edge_vec, nedge, nvar, nspecies));
+    return __result;
+END_RCPP
+}
+// C_anc_recon_rates
+List C_anc_recon_rates(arma::mat Y, arma::vec anc, arma::vec des, arma::vec edge_vec, int nedge, int nvar, int nspecies, int REML);
+RcppExport SEXP Rphylopars_C_anc_recon_rates(SEXP YSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP edge_vecSEXP, SEXP nedgeSEXP, SEXP nvarSEXP, SEXP nspeciesSEXP, SEXP REMLSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type anc(ancSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type des(desSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type edge_vec(edge_vecSEXP);
+    Rcpp::traits::input_parameter< int >::type nedge(nedgeSEXP);
+    Rcpp::traits::input_parameter< int >::type nvar(nvarSEXP);
+    Rcpp::traits::input_parameter< int >::type nspecies(nspeciesSEXP);
+    Rcpp::traits::input_parameter< int >::type REML(REMLSEXP);
+    __result = Rcpp::wrap(C_anc_recon_rates(Y, anc, des, edge_vec, nedge, nvar, nspecies, REML));
+    return __result;
+END_RCPP
+}
 // try_inv
 arma::mat try_inv(arma::mat M, int nvar);
 RcppExport SEXP Rphylopars_try_inv(SEXP MSEXP, SEXP nvarSEXP) {
