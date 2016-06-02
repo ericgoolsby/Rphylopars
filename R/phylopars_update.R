@@ -39,7 +39,8 @@ anc.recon <- function(trait_data, tree, vars = FALSE, CI = FALSE)
   if(vars || CI)
   {
     p <- ret$p[-(1:length(tree$tip.label))]
-    sigma <- colMeans(apply(trait_data,2,pic,phy=tree)^2)
+    m2d <- multi2di(phy = tree,random = FALSE)
+    sigma <- colMeans(apply(trait_data,2,pic,phy=m2d)^2)
     var <- matrix(1/p) %*% (sigma)
     rownames(var) <- tree$node.label
     colnames(var) <- colnames(Yhat)
