@@ -29,8 +29,8 @@ calc_OU_len <- function(heights, edge_mat, des_order, nedge, P, lambda, sigma, a
     .Call('Rphylopars_calc_OU_len', PACKAGE = 'Rphylopars', heights, edge_mat, des_order, nedge, P, lambda, sigma, anc, des, nvar, nspecies)
 }
 
-tp <- function(L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, parent_edges, pars, nvar, phylocov_diag, nind, nob, nspecies, nedge, anc, des, REML, species_subset, un_species_subset, subset_list, ind_list, tip_combn, is_edge_ind, fixed_mu, OU_len, phylocov_fixed, phenocov_fixed, is_phylocov_fixed = 0L, is_phenocov_fixed = 0L, OU_par = 0L, ret_level = 1L, use_LL = 0L) {
-    .Call('Rphylopars_tp', PACKAGE = 'Rphylopars', L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, parent_edges, pars, nvar, phylocov_diag, nind, nob, nspecies, nedge, anc, des, REML, species_subset, un_species_subset, subset_list, ind_list, tip_combn, is_edge_ind, fixed_mu, OU_len, phylocov_fixed, phenocov_fixed, is_phylocov_fixed, is_phenocov_fixed, OU_par, ret_level, use_LL)
+tp <- function(L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, parent_edges, pars, nvar, phylocov_diag, nind, nob, nspecies, nedge, anc, des, REML, species_subset, un_species_subset, subset_list, ind_list, tip_combn, is_edge_ind, fixed_mu, OU_len, phylocov_fixed, phenocov_fixed, phenocov_list, is_phylocov_fixed = 0L, is_phenocov_fixed = 0L, OU_par = 0L, ret_level = 1L, use_LL = 0L, is_phenocov_list = 0L) {
+    .Call('Rphylopars_tp', PACKAGE = 'Rphylopars', L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, parent_edges, pars, nvar, phylocov_diag, nind, nob, nspecies, nedge, anc, des, REML, species_subset, un_species_subset, subset_list, ind_list, tip_combn, is_edge_ind, fixed_mu, OU_len, phylocov_fixed, phenocov_fixed, phenocov_list, is_phylocov_fixed, is_phenocov_fixed, OU_par, ret_level, use_LL, is_phenocov_list)
 }
 
 EM_Fels2008 <- function(pics, vars, phylocov, phenocov, nvar, phylocov_fixed, phenocov_fixed, is_phylocov_fixed = 0L, is_phenocov_fixed = 0L, diag_pheno = 0L, EM_Fels_limit = 5000L, tol = 1e-6, REML = 1L, diag_phylo = 0L) {
