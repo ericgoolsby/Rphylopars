@@ -122,12 +122,13 @@ print.SSC <- function(x, ...)
 }
 
 
-phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE)
+phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE,phenocov_list=list())
 {
   tree <- tree[c("edge","tip.label","edge.length","Nnode")]
   class(tree) <- "phylo"
   tree <- reorder(tree,"postorder")
   if(model=="white" | model=="star") tree <- reorder(rescale(tree,model="lambda",lambda=0),"postorder")
+  
   
   if(is.null(tree$node.label))
   {
@@ -192,6 +193,16 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     pheno_error <- FALSE
     pheno_correlated <- FALSE
   }
+  zphenocov_list <- list()
+  force_optim <- FALSE
+  if(length(phenocov_list)>0)
+  {
+    force_optim <- TRUE
+    if(length(phenocov_list)==1) phenocov_list <- rep(phenocov_list,length(tree$tip.label))
+    if(length(which(names(phenocov_list) %in% tree$tip.label))<length(tree$tip.label)) names(phenocov_list) <- tree$tip.label
+    pheno_error <- pheno_correlated <- FALSE
+    phenocov_fixed <- phenocov_start <- zphenocov_fixed <- zphenocov_start <- matrix(NA)
+  } else phenocov_list <- zphenocov_list <- list()
   
   if(missing(phylocov_start)) phylocov_start <- matrix(NA) else if(is.na(phylocov_start)[[1]]) phylocov_start <- matrix(NA)
   if(missing(phenocov_start)) phenocov_start <- matrix(NA) else if(is.na(phenocov_start)[[1]]) phenocov_start <- matrix(NA)
@@ -222,6 +233,13 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       #zstand$phylocov[i,i] <- sum(pic(x = dat,phy = multi2di(temp_tree,random = FALSE))^2) / (length(temp_tree$tip.label)-REML)
       #zstand$mu[i] <- ace(x = dat,phy = multi2di(temp_tree,random=FALSE),method="pic")$ace[[1]]
     }
+  }
+  
+  if(length(phenocov_list)>0)
+  {
+    zphenocov_list <- lapply(phenocov_list,function(X) as.matrix(X / (sqrt(diag(zstand$phylocov)) %*% t(sqrt(diag(zstand$phylocov))))))[tree$tip.label]
+    phenocov_list <- phenocov_list[tree$tip.label]
+    zphenocov_list <- zphenocov_list[tree$tip.label]
   }
   
   if(missing(phylocov_fixed)) phylocov_fixed <- zphylocov_fixed <- matrix(NA) else if(!is.na(phylocov_fixed)[[1]]) zphylocov_fixed <- as.matrix(phylocov_fixed / (sqrt(diag(zstand$phylocov)) %*% t(sqrt(diag(zstand$phylocov))))) else phylocov_fixed <- zphylocov_fixed <- matrix(NA)
@@ -356,7 +374,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     
     # function for numerical optimization
     # if the difference between the EM log-likelihood and the current log-likelihood is extremely high, reject (likely numerical precision issues)
-    f <- function(pars,em_ll,R,Rmat,phylocov_fixed,phenocov_fixed)
+    f <- function(pars,em_ll,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list)
     {
       if(!nested_optim & (model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta"))
       {
@@ -386,7 +404,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                    phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                    species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                    ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
-                   is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                   is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed, is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                    is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl[[1]],silent=TRUE)
       if(class(ll)=="try-error") ll <- em_ll-max_delta
       if(is.na(ll)) ll <- em_ll - max_delta
@@ -410,7 +428,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                          phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                          species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                          ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
-                         is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                         is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                          is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl[[1]],silent=TRUE)[[1]]
       
       
@@ -436,7 +454,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                       phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                       species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                       ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=mu,ret_level=3,
-                      is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                      is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=0,phenocov_list=list(),
                       is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
         imputed_dat <- data.frame(species=trait_data$species,imputed$recon_ind)
         
@@ -455,7 +473,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                   phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                   species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                   ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=2,
-                  is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                  is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=0,phenocov_list=list(),
                   is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
         
         mu <- ll2$theta
@@ -469,7 +487,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                         phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                         species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                         ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=mu,ret_level=3,
-                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=0,phenocov_list=list(),
                         is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
           imputed_dat <- data.frame(species=trait_data$species,imputed$recon_ind)
           args <- prep_em(imputed_dat,tree)
@@ -494,14 +512,14 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                    phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                    species_subset=species_subset_complete, un_species_subset = un_species_subset_complete,subset_list=subset_list_complete,
                    ind_list=ind_list_complete, tip_combn=tip_combn_complete,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=2,
-                   is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                   is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=0,phenocov_list=list(),
                    is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$theta
           ll2 <- tp(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
                     edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars, nvar=nvar, 
                     phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                     species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                     ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
-                    is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                    is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=0,phenocov_list=list(),
                     is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl
           if(ll2<ll)
           {
@@ -530,7 +548,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                  phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                  species_subset=species_subset_complete, un_species_subset = un_species_subset_complete,subset_list=subset_list_complete,
                  ind_list=ind_list_complete, tip_combn=tip_combn_complete,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=2,
-                 is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                 is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                  is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$theta
         best_phylocov <- phylocov <- crossprod(apply(dat,2,pic,phy=drop_tree))/(nspecies-REML)
         
@@ -541,7 +559,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                         phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                         species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                         ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
-                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                         is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl
         
         for(k in 1:EM_missing_limit)
@@ -552,7 +570,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                         phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                         species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                         ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=mu,ret_level=3,
-                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                         is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
           
           dat <- imputed$recon_ind
@@ -565,7 +583,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                        phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                        species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                        ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,
-                       is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                       is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                        is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$tip_uncertainty
           mu <- as.matrix(apply(dat,2,function(X) ace(X,drop_tree,method="pic")$ace[[1]]))
           phylocov <- biased_sigma + tip_un/(nspecies-REML)
@@ -576,7 +594,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                     phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                     species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                     ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
-                    is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                    is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                     is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl
           
           if(ll2<ll)
@@ -611,10 +629,10 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
               phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
               species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
               ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,
-              is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+              is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
               is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
     mu <- ll2[[2]]
-    if(!(!do_optim | skip_optim))
+    if(do_optim | (!skip_optim))
     {
       tedge_vec <- edge_vec
       # numerical optimization
@@ -622,7 +640,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       if(!is.na(model_par_start)[[1]]) MOD_PAR_START <- model_par_start else
         if(!is.na(model_par_fixed)[[1]]) MOD_PAR_START <- model_par_start
       if(!nested_optim & (model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta")) MOD_PAR <- -log(-(-max(par_bounds)+MOD_PAR_START)/(-min(par_bounds)+MOD_PAR_START))
-      if((complete_data & (model!="BM" & model!="white" & model!="star" & is.na(model_par_fixed[[1]]))) | pheno_error | !complete_data)
+      if((complete_data & (model!="BM" & model!="white" & model!="star" & is.na(model_par_fixed[[1]]))) | pheno_error | !complete_data | force_optim)
         for(i in 1:repeat_optim_limit)
         {
           zRmat <- (trait_data[,1:nvar+1,drop=FALSE] - matrix(1,nind) %*% t(zstand$mu)) / sqrt(matrix(1,nind) %*% diag(zstand$phylocov))
@@ -636,10 +654,10 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                         phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                         species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                         ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
-                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=zphylocov_fixed,
+                        is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=zphylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=zphenocov_list,
                         is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=zphenocov_fixed,OU_len=list())$logl
           if(!nested_optim & (model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta")) pars2 <- c(pars2,MOD_PAR)
-          pars2 <- optim(par = pars2,fn = f,control=list(fnscale=-1),method=if(i%%2 == 1) "BFGS" else "Nelder-Mead",em_ll=z_em_ll,R=zR,Rmat=zRmat,phylocov_fixed=zphylocov_fixed,phenocov_fixed=zphenocov_fixed)
+          pars2 <- optim(par = pars2,fn = f,control=list(fnscale=-1),method=if(i%%2 == 1) "BFGS" else "Nelder-Mead",em_ll=z_em_ll,R=zR,Rmat=zRmat,phylocov_fixed=zphylocov_fixed,phenocov_fixed=zphenocov_fixed,phenocov_list=zphenocov_list)
           if(is.na(phylocov_fixed)[[1]]) phylocov2 <- pars_to_mat(pars2$par[phylocov_pars],nvar,as.integer(!phylo_correlated)) else phylocov2 <- zphylocov_fixed
           if(is.na(phenocov_fixed)[[1]])
           {
@@ -659,7 +677,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                     phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                     species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                     ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
-                    is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                    is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                     is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
           if(is.na(phenocov_fixed)[[1]]) if(pheno_error!=0) phenocov <- phenocov2 * (sqrt(diag(zstand$phylocov)) %*% t(sqrt(diag(zstand$phylocov))))
           if(is.na(phylocov_fixed)[[1]]) phylocov <- phylocov2 * (sqrt(diag(zstand$phylocov)) %*% t(sqrt(diag(zstand$phylocov))))
@@ -674,7 +692,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                 phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                 species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                 ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,
-                is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                 is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
     }
     ret <- list(ll=ll2$logl,phylocov=phylocov,phenocov=phenocov,mu=ll2[[2]],pars=pars,ll2=ll2)
@@ -698,7 +716,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       tree$edge.length <- evec(model_par_fixed)[1:nedge]
       ret <- phylopars(trait_data=trait_data,tree=tree,pheno_error=pheno_error>0,pheno_correlated=pheno_error==2,phylo_correlated=phylo_correlated,
                        REML=REML,EM_Fels_limit=EM_Fels_limit,repeat_optim_limit=repeat_optim_limit,EM_missing_limit=EM_missing_limit,repeat_optim_tol=repeat_optim_tol,phylocov_start=phylocov_start,
-                       phenocov_start=phenocov_start,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,skip_optim=skip_optim,skip_EM=skip_EM,EM_verbose=EM_verbose,optim_verbose=optim_verbose)
+                       phenocov_start=phenocov_start,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,skip_optim=skip_optim,skip_EM=skip_EM,EM_verbose=EM_verbose,optim_verbose=optim_verbose,phenocov_list=phenocov_list)
       if(!is.na(perm_model))
       {
         if(perm_model=="lambda" | perm_model=="OU" | perm_model=="EB" | perm_model=="kappa" | perm_model=="delta")
@@ -781,7 +799,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                 phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                 species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                 ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,
-                is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                 is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
     } else if(w==2)
     {
@@ -811,7 +829,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       edge_mat <- edge_mat[[1]]
       
       
-      OU_fun <- function(pars,R,Rmat,phylocov_fixed,phenocov_fixed,ret_level=1,BM_ll=NA)
+      OU_fun <- function(pars,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list,ret_level=1,BM_ll=NA)
       {
         if(is.na(phylocov_fixed)[[1]]) phylocov <- pars_to_mat(pars[phylocov_pars],nvar,as.integer(!phylo_correlated)) else phylocov <- phylocov_fixed
         if(pheno_error>0) if(is.na(phenocov_fixed)[[1]]) phenocov <- pars_to_mat(pars[phenocov_pars],nvar,pheno_error) else phenocov <- phenocov_fixed
@@ -861,7 +879,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                        phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                        species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                        ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,OU_len=temp_len_vec,OU_par=1,use_LL=0,
-                       is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                       is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                        is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed)[[1]]
         
         
@@ -871,7 +889,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                   phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                   species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                   ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=ret_level,OU_len=len_vec,OU_par=1,use_LL=0,
-                  is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                  is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                   is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed)
         if(is.na(ll2)[[1]])
         {
@@ -902,7 +920,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                        phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                        species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                        ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,OU_len=temp_len_vec,OU_par=1,use_LL=0,
-                       is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,
+                       is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                        is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed)[[1]]
         
         if(!is.na(temp_ll2)) if(abs(temp_ll2-ll2[[1]])>100)
@@ -919,7 +937,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       
       ret <- phylopars(trait_data=trait_data,tree=tree,model="OU",pheno_error=pheno_error>0,pheno_correlated=pheno_error==2,phylo_correlated=phylo_correlated,
                        REML=REML,EM_Fels_limit=EM_Fels_limit,repeat_optim_limit=repeat_optim_limit,EM_missing_limit=EM_missing_limit,repeat_optim_tol=repeat_optim_tol,phylocov_start=phylocov_start,
-                       phenocov_start=phenocov_start,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,skip_optim=skip_optim,skip_EM=skip_EM,EM_verbose=EM_verbose,optim_verbose=optim_verbose)
+                       phenocov_start=phenocov_start,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,skip_optim=skip_optim,skip_EM=skip_EM,EM_verbose=EM_verbose,optim_verbose=optim_verbose,phenocov_list=phenocov_list)
+    
       ALPHA <- diag(x = ret$model$alpha + max(c(min(par_bounds),min(c(.001,max(par_bounds))))),nrow = nvar)
       ALPHA[ALPHA>max(par_bounds)] <- max(par_bounds)
       #phylocov <- ret$pars[[1]]
@@ -946,7 +965,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
           SIGMA[a,b] <- three.point.compute(phy = tr_c,ret$anc_recon[1:nspecies,i]-ace(ret$anc_recon[1:nspecies,i],tr_a,method="pic")$ace[[1]],ret$anc_recon[1:nspecies,j]-ace(ret$anc_recon[1:nspecies,j],tr_b,method="pic")$ace[[1]])$QP/length(tree$tip.label)*(ALPHA[i,i]+ALPHA[j,j])
         }
       }
-      phylocov <- SIGMA
+      SIGMA <- as.matrix(nearPD(SIGMA)$mat)
       
       if(pheno_error!=0) phenocov <- ret$pars[[2]]
       mu <- ret$mu
@@ -981,25 +1000,24 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                  species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                  ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,OU_par=0,use_LL=0,
                  is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=zphylocov_fixed,
+                 is_phenocov_list=length(phenocov_list),phenocov_list=zphenocov_list,
                  is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=zphenocov_fixed,OU_len=list())
       zBM_ll <- zll2[[1]]
-      
-      o <- optim(pars2,fn = function(X,BM_ll,R,Rmat,phylocov_fixed,phenocov_fixed)
+      o <- optim(pars2,fn = function(X,BM_ll,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list)
       {
-        ll <- try(OU_fun(X,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,BM_ll=BM_ll),silent=TRUE)
+        ll <- try(OU_fun(X,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,phenocov_list,BM_ll=BM_ll),silent=TRUE)
         if(class(ll)=="try-error") ll <- BM_ll-max_delta
         ll <- ll[[1]]
         if(is.na(ll)) ll <- BM_ll - max_delta
         if(abs(abs(BM_ll)-abs(ll[[1]]))>max_delta) ll <- BM_ll - max_delta
         ll[[1]]
-      },control=list(fnscale=-1),BM_ll=zBM_ll,R=zR,Rmat=zRmat,phylocov_fixed=zphylocov_fixed,phenocov_fixed=zphenocov_fixed)
+      },control=list(fnscale=-1),BM_ll=zBM_ll,R=zR,Rmat=zRmat,phylocov_fixed=zphylocov_fixed,phenocov_fixed=zphenocov_fixed,phenocov_list=zphenocov_list)
       if(is.na(phylocov_fixed)[[1]]) phylocov2 <- pars_to_mat(o$par[phylocov_pars],nvar,as.integer(!phylo_correlated)) else phylocov2 <- zphylocov_fixed
       if(is.na(phenocov_fixed)[[1]]) if(pheno_error>0) phenocov2 <- pars_to_mat(o$par[phenocov_pars],nvar,pheno_error) else phenocov2 <- zphenocov_fixed
       if(is.na(model_par_fixed)[[1]]) alpha <- pars_to_mat(o$par[alpha_pars],nvar,diag = abs(full_alpha-1))
       if(npd) phylocov2 <- as.matrix(nearPD(phylocov2)$mat)
       if(npd) if(pheno_error>0) phenocov2 <- as.matrix(nearPD(phenocov2)$mat)
       if(npd) alpha <- as.matrix(nearPD(alpha)$mat)
-      
       pars2 <- numeric()
       if(is.na(phylocov_fixed)[[1]]) pars2 <- mat_to_pars(phylocov2 * (sqrt(diag(zstand$phylocov)) %*% t(sqrt(diag(zstand$phylocov)))),nvar,as.integer(!phylo_correlated))
       if(is.na(phenocov_fixed)[[1]]) if(pheno_error!=0) pars2 <- c(pars2,mat_to_pars(phenocov2 * (sqrt(diag(zstand$phylocov)) %*% t(sqrt(diag(zstand$phylocov)))),nvar,pheno_error))
@@ -1009,20 +1027,20 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       if(is.na(phenocov_fixed)[[1]]) if(pheno_error!=0) phenocov <- phenocov2 * (sqrt(diag(zstand$phylocov)) %*% t(sqrt(diag(zstand$phylocov))))
       
       pars <- pars2
-      ll2 <- OU_fun(pars,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,ret_level=3)
-      o <- optim(pars,fn = function(X,BM_ll,R,Rmat,phylocov_fixed,phenocov_fixed) 
+      ll2 <- OU_fun(pars,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,phenocov_list=phenocov_list,ret_level=3)
+      o <- optim(pars,fn = function(X,BM_ll,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list) 
       {
-        ll <- try(OU_fun(X,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,BM_ll=BM_ll),silent=TRUE)
+        ll <- try(OU_fun(X,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,phenocov_list=phenocov_list,BM_ll=BM_ll),silent=TRUE)
         if(class(ll)=="try-error") ll <- BM_ll-max_delta
         ll <- ll[[1]]
         if(is.na(ll)) ll <- BM_ll - max_delta
         if(abs(abs(BM_ll)-abs(ll[[1]]))>max_delta) ll <- BM_ll - max_delta
         ll[[1]]
-      },control=list(fnscale=-1),method="BFGS",BM_ll=ll2[[1]],R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed)
+      },control=list(fnscale=-1),method="BFGS",BM_ll=ll2[[1]],R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,phenocov_list=phenocov_list)
       if(is.na(phylocov_fixed)[[1]]) phylocov <- pars_to_mat(o$par[phylocov_pars],nvar,as.integer(!phylo_correlated))
       if(is.na(phenocov_fixed)[[1]]) if(pheno_error>0) phenocov <- pars_to_mat(o$par[phenocov_pars],nvar,pheno_error)
       if(is.na(model_par_fixed)[[1]]) alpha <- pars_to_mat(o$par[alpha_pars],nvar,diag = abs(full_alpha-1))
-      ll2 <- OU_fun(o$par,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,ret_level=3)
+      ll2 <- OU_fun(o$par,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,phenocov_list=phenocov_list,ret_level=3)
       pars <- o$par
       if(usezscores)
       {

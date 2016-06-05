@@ -14,7 +14,7 @@ phylocov_fixed, phenocov_fixed, model_par_fixed, skip_optim = FALSE,
 skip_EM = FALSE, EM_Fels_limit = 1000, repeat_optim_limit = 1,
 EM_missing_limit = 50,repeat_optim_tol = 0.01, model_par_evals = 10,
 max_delta = 10000, EM_verbose = FALSE,optim_verbose = FALSE, npd = FALSE,
-nested_optim = FALSE, usezscores = TRUE)
+nested_optim = FALSE, usezscores = TRUE, phenocov_list = list())
 }
 \arguments{
   \item{formula}{
@@ -100,6 +100,9 @@ Only relevant if fitting a univariate alternative evolutionary model. Tries mult
 }
   \item{usezscores}{
 Whether or not ot use centered and standardized data during numerical optimization (recommended).
+}
+  \item{phenocov_list}{
+An optional named list of species-specific within-species covariance matrices to be held fixed, as in Ives et al (2007). This option forces pheno_error and pheno_correlated to be FALSE, and uses mean species values instead of raw data. Raw variance should be divided by the number of observations per species (i.e., squared standard errors). See Ives et al (2007) for more details.
 }
 }
 \value{

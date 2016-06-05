@@ -338,7 +338,7 @@ List calc_OU_len(arma::vec heights,arma::mat edge_mat,arma::vec des_order,int ne
 }
 
 // [[Rcpp::export]]
-List tp(arma::mat L,arma::mat R,arma::mat Rmat,int mL,int mR,int pheno_error,arma::vec edge_vec,arma::vec edge_ind,arma::vec ind_edge,arma::vec parent_edges,arma::vec pars,unsigned int nvar,int phylocov_diag,int nind,int nob,int nspecies,int nedge,arma::vec anc,arma::vec des,int REML,List species_subset,List un_species_subset,List subset_list,List ind_list,arma::vec tip_combn,LogicalVector is_edge_ind,arma::mat fixed_mu,List OU_len,arma::mat phylocov_fixed,arma::mat phenocov_fixed,int is_phylocov_fixed=0,int is_phenocov_fixed=0,int OU_par=0,int ret_level=1,int use_LL=0)
+List tp(arma::mat L,arma::mat R,arma::mat Rmat,int mL,int mR,int pheno_error,arma::vec edge_vec,arma::vec edge_ind,arma::vec ind_edge,arma::vec parent_edges,arma::vec pars,unsigned int nvar,int phylocov_diag,int nind,int nob,int nspecies,int nedge,arma::vec anc,arma::vec des,int REML,List species_subset,List un_species_subset,List subset_list,List ind_list,arma::vec tip_combn,LogicalVector is_edge_ind,arma::mat fixed_mu,List OU_len,arma::mat phylocov_fixed,arma::mat phenocov_fixed,List phenocov_list,int is_phylocov_fixed=0,int is_phenocov_fixed=0,int OU_par=0,int ret_level=1,int use_LL=0,int is_phenocov_list=0)
 {
   /*
   subset_list is a list of unique matrices to invert once
@@ -436,6 +436,7 @@ List tp(arma::mat L,arma::mat R,arma::mat Rmat,int mL,int mR,int pheno_error,arm
         if(OU_par==1)
         {
           phenocov = Rcpp::as<arma::mat>(OU_len(edge_ind(i)));
+          if(is_phenocov_list>0) phenocov.submat(Ka,Ka) += Rcpp::as<arma::mat>(phenocov_list(i)).submat(Ka,Ka);
           Bainv = try_inv(phenocov.submat(Ka,Ka),Ka.size());
           if(Bainv(0,0)==1.0123456789)
           {
@@ -445,7 +446,11 @@ List tp(arma::mat L,arma::mat R,arma::mat Rmat,int mL,int mR,int pheno_error,arm
         {
           len = edge_vec(edge_ind(i));
           phenocov = phylocov*len;
-          Bainv = Bainv/len;
+          if(is_phenocov_list>0)
+          {
+            phenocov.submat(Ka,Ka) += Rcpp::as<arma::mat>(phenocov_list(i)).submat(Ka,Ka);
+            Bainv = try_inv(phenocov.submat(Ka,Ka),Ka.size());
+          } else Bainv = Bainv/len;
         }
       }
       arma::mat R_i = R.rows(Ia);

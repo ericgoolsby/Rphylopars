@@ -115,8 +115,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // tp
-List tp(arma::mat L, arma::mat R, arma::mat Rmat, int mL, int mR, int pheno_error, arma::vec edge_vec, arma::vec edge_ind, arma::vec ind_edge, arma::vec parent_edges, arma::vec pars, unsigned int nvar, int phylocov_diag, int nind, int nob, int nspecies, int nedge, arma::vec anc, arma::vec des, int REML, List species_subset, List un_species_subset, List subset_list, List ind_list, arma::vec tip_combn, LogicalVector is_edge_ind, arma::mat fixed_mu, List OU_len, arma::mat phylocov_fixed, arma::mat phenocov_fixed, int is_phylocov_fixed, int is_phenocov_fixed, int OU_par, int ret_level, int use_LL);
-RcppExport SEXP Rphylopars_tp(SEXP LSEXP, SEXP RSEXP, SEXP RmatSEXP, SEXP mLSEXP, SEXP mRSEXP, SEXP pheno_errorSEXP, SEXP edge_vecSEXP, SEXP edge_indSEXP, SEXP ind_edgeSEXP, SEXP parent_edgesSEXP, SEXP parsSEXP, SEXP nvarSEXP, SEXP phylocov_diagSEXP, SEXP nindSEXP, SEXP nobSEXP, SEXP nspeciesSEXP, SEXP nedgeSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP REMLSEXP, SEXP species_subsetSEXP, SEXP un_species_subsetSEXP, SEXP subset_listSEXP, SEXP ind_listSEXP, SEXP tip_combnSEXP, SEXP is_edge_indSEXP, SEXP fixed_muSEXP, SEXP OU_lenSEXP, SEXP phylocov_fixedSEXP, SEXP phenocov_fixedSEXP, SEXP is_phylocov_fixedSEXP, SEXP is_phenocov_fixedSEXP, SEXP OU_parSEXP, SEXP ret_levelSEXP, SEXP use_LLSEXP) {
+List tp(arma::mat L, arma::mat R, arma::mat Rmat, int mL, int mR, int pheno_error, arma::vec edge_vec, arma::vec edge_ind, arma::vec ind_edge, arma::vec parent_edges, arma::vec pars, unsigned int nvar, int phylocov_diag, int nind, int nob, int nspecies, int nedge, arma::vec anc, arma::vec des, int REML, List species_subset, List un_species_subset, List subset_list, List ind_list, arma::vec tip_combn, LogicalVector is_edge_ind, arma::mat fixed_mu, List OU_len, arma::mat phylocov_fixed, arma::mat phenocov_fixed, List phenocov_list, int is_phylocov_fixed, int is_phenocov_fixed, int OU_par, int ret_level, int use_LL, int is_phenocov_list);
+RcppExport SEXP Rphylopars_tp(SEXP LSEXP, SEXP RSEXP, SEXP RmatSEXP, SEXP mLSEXP, SEXP mRSEXP, SEXP pheno_errorSEXP, SEXP edge_vecSEXP, SEXP edge_indSEXP, SEXP ind_edgeSEXP, SEXP parent_edgesSEXP, SEXP parsSEXP, SEXP nvarSEXP, SEXP phylocov_diagSEXP, SEXP nindSEXP, SEXP nobSEXP, SEXP nspeciesSEXP, SEXP nedgeSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP REMLSEXP, SEXP species_subsetSEXP, SEXP un_species_subsetSEXP, SEXP subset_listSEXP, SEXP ind_listSEXP, SEXP tip_combnSEXP, SEXP is_edge_indSEXP, SEXP fixed_muSEXP, SEXP OU_lenSEXP, SEXP phylocov_fixedSEXP, SEXP phenocov_fixedSEXP, SEXP phenocov_listSEXP, SEXP is_phylocov_fixedSEXP, SEXP is_phenocov_fixedSEXP, SEXP OU_parSEXP, SEXP ret_levelSEXP, SEXP use_LLSEXP, SEXP is_phenocov_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -150,12 +150,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type OU_len(OU_lenSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type phylocov_fixed(phylocov_fixedSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type phenocov_fixed(phenocov_fixedSEXP);
+    Rcpp::traits::input_parameter< List >::type phenocov_list(phenocov_listSEXP);
     Rcpp::traits::input_parameter< int >::type is_phylocov_fixed(is_phylocov_fixedSEXP);
     Rcpp::traits::input_parameter< int >::type is_phenocov_fixed(is_phenocov_fixedSEXP);
     Rcpp::traits::input_parameter< int >::type OU_par(OU_parSEXP);
     Rcpp::traits::input_parameter< int >::type ret_level(ret_levelSEXP);
     Rcpp::traits::input_parameter< int >::type use_LL(use_LLSEXP);
-    __result = Rcpp::wrap(tp(L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, parent_edges, pars, nvar, phylocov_diag, nind, nob, nspecies, nedge, anc, des, REML, species_subset, un_species_subset, subset_list, ind_list, tip_combn, is_edge_ind, fixed_mu, OU_len, phylocov_fixed, phenocov_fixed, is_phylocov_fixed, is_phenocov_fixed, OU_par, ret_level, use_LL));
+    Rcpp::traits::input_parameter< int >::type is_phenocov_list(is_phenocov_listSEXP);
+    __result = Rcpp::wrap(tp(L, R, Rmat, mL, mR, pheno_error, edge_vec, edge_ind, ind_edge, parent_edges, pars, nvar, phylocov_diag, nind, nob, nspecies, nedge, anc, des, REML, species_subset, un_species_subset, subset_list, ind_list, tip_combn, is_edge_ind, fixed_mu, OU_len, phylocov_fixed, phenocov_fixed, phenocov_list, is_phylocov_fixed, is_phenocov_fixed, OU_par, ret_level, use_LL, is_phenocov_list));
     return __result;
 END_RCPP
 }
