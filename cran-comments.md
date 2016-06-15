@@ -1,5 +1,5 @@
 ## Test environments
-* Local Windows 10 install, R 3.2.4
+* Local Windows 10 install, R 3.3.0
 * win-builder (devel and release)
 
 ## R CMD check results
@@ -14,6 +14,7 @@
           Ornstein (7:341)
           Pagel's (7:374)
           Phylogenetic (3:8)
+          Rphylopars (7:443)
           Uhlenbeck (7:350)
           datasets (7:72)
           intraspecific (7:126)
