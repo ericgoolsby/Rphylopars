@@ -269,7 +269,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     trait_data <- temp_dat
     rm(temp_dat)
   } else if(max(table(as.character(trait_data$species)))==1) pheno_error <- pheno_correlated <- FALSE else pheno_error <- TRUE
-  
+  if(!is.na(phenocov_fixed[1,1])) pheno_error <- pheno_correlated <- TRUE
   if(pheno_correlated) pheno_error <- 2 else if(pheno_error) pheno_error <- 1 else pheno_error <- 0
   
   if(pheno_error==0)

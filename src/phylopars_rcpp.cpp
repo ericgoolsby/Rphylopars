@@ -622,7 +622,7 @@ List tp(arma::mat L,arma::mat R,arma::mat Rmat,int mL,int mR,int pheno_error,arm
     len = edge_vec(i);
     des_edge = i + nind;
     anc_edge = parent_edges(i) + nind;
-    if((pheno_error==0) && is_edge_ind(i))
+    if((pheno_error==0) && is_edge_ind(i) && (is_phenocov_list==0))
     {
       /*
       XX[[des_edge]][-Ka,-Ka] <- other_p[-Ka,-Ka]

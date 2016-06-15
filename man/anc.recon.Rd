@@ -26,9 +26,6 @@ Whether to return 95\% confidence intervals of the restricted maximum likelihood
 \value{
 A named vector of maximum likelihood ancestral states (with names corresponding to node names if available or node numbers from the tree rearranged in postorder, as obtained by the command \code{reorder(tree,"postorder")}). If vars or CI is set to TRUE, a list is returned with these values included.
 }
-\references{
-
-}
 \author{
 Goolsby E.W. (In Review). "Ultra-fast ancestral state reconstruction of continuous characters: a rerooting-free maximum likelihood approach."
 
@@ -45,5 +42,5 @@ Revell, L. J. (2012) phytools: An R package for phylogenetic comparative biology
 require(ape)
 tree <- rtree(10000) # random tree with 10,000 taxa
 x <- setNames(rnorm(1e4),tree$tip.label) # random trait data
-recon <- anc.recon(trait_data=x,phy=tree)
+recon <- anc.recon(trait_data=x,tree=tree)
 }
