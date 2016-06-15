@@ -3,12 +3,11 @@
 * win-builder (devel and release)
 
 ## R CMD check results
-* There were no ERRORs or WARNINGs. 
-* There was 1 NOTE on the local Windows check
-    * checking CRAN incoming feasibility ... NOTE
-        * Maintainer: 'Eric W. Goolsby <eric.goolsby.evolution@gmail.com>'
-* There was 1 NOTE on the win-builder (devel and release) check
-    * checking CRAN incoming feasibility ... NOTE
+* There were no ERRORs.
+* There was 1 WARNING
+    * checking CRAN incoming feasibility ... WARNING
+        * Days since last update: 0
+            * EXPLANATION: The file src/Rphylopars[Conflict].dll was discovered in yesterday's upload, and at the request of CRAN, this issue was corrected and the package was reuploaded.
         * Maintainer: 'Eric W. Goolsby <eric.goolsby.evolution@gmail.com>'
         * Possibly mis-spelled words in DESCRIPTION:
           Ornstein (7:341)
