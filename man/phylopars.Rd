@@ -107,6 +107,7 @@ For internal use only.
   \item{ret_level}{
 For internal use only.
 }
+}
 \value{
 An object of class \code{phylopars}. For models with phenotypic (within-species) covariance, the estimated percentage of variance explained by the phylogeny is provided as 100*(1 - phenotypic_variance/raw_variance), where raw_variance is the variance of all observations for a given trait across species (\code{var(PPE$trait_data[,2:ncol(PPE$trait_data)],na.rm=TRUE)}).
 \item{logLik }{The log-likelihood of the model}
