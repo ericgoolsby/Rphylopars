@@ -103,6 +103,7 @@ An optional named list of species-specific within-species covariance matrices to
 }
   \item{ret_args}{
 For internal use only.
+}
   \item{ret_level}{
 For internal use only.
 }
