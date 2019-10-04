@@ -100,6 +100,7 @@ Whether or not ot use centered and standardized data during numerical optimizati
 }
   \item{phenocov_list}{
 An optional named list of species-specific within-species covariance matrices to be held fixed, as in Ives et al (2007). This option forces pheno_error and pheno_correlated to be FALSE, and uses mean species values instead of raw data. Raw variance should be divided by the number of observations per species (i.e., squared standard errors). See Ives et al (2007) for more details.
+}
   \item{ret_args}{
 For internal use only.
   \item{ret_level}{
