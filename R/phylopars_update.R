@@ -1402,15 +1402,19 @@ summary.phylopars <- function(object, ...)
   } else if(PPE$model=="BM") cat("Brownian motion model") else if(PPE$model=="white" | PPE$model=="star") cat("Star phylogeny model")
   cat("\n")
   
-  ret <- matrix(0,nrow(PPE$pars[[1]]),4,dimnames = list(colnames(PPE$pars[[1]]),c("phylogenetic mean","phylogenetic sd","phenotypic sd",
-                                                                                  "% variance explained by phylogeny")))
+  ncol <- ifelse(length(PPE$pars)>1,4,2)
+  ret <- matrix(0,nrow(PPE$pars[[1]]),ncol,dimnames = list(colnames(PPE$pars[[1]]),
+                                                           c("phylogenetic mean","phylogenetic sd","phenotypic sd",
+                                                             "% variance explained by phylogeny")[1:ncol]))
   ret[,1] <- PPE$mu
   ret[,2] <- round(sqrt(diag(PPE$pars[[1]])),4)
-  ret[,3] <- round(sqrt(diag(PPE$pars[[2]])),4)
-  nvar <- ncol(PPE$pars[[1]])
-  percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1],2,function(X) var(X,na.rm=TRUE)))*100
-  names(percent_var) <- colnames(PPE$pars[[1]])
-  ret[,4] <- round(percent_var,2)
+  if(length(PPE$pars)>1) {
+    ret[,3] <- round(sqrt(diag(PPE$pars[[2]])),4)
+    nvar <- ncol(PPE$pars[[1]])
+    percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1],2,function(X) var(X,na.rm=TRUE)))*100
+    names(percent_var) <- colnames(PPE$pars[[1]])
+    ret[,4] <- round(percent_var,2)
+  }
   ret
 }
 
