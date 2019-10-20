@@ -33,9 +33,11 @@ Bruggeman J, Heringa J and Brandt BW. (2009) PhyloPars: estimation of missing pa
 Eric W. Goolsby \email{eric.goolsby.evolution@gmail.com}
 }
 \examples{
+\dontrun{
 # simulate data
 sim_data <- simtraits(ntaxa = 15,ntraits = 4,nreps = 3,nmissing = 10)
 
 write.phylopars(trait_data = sim_data$trait_data,tree = sim_data$tree,data_file = "data_path.txt",
 tree_file = "tree_path.new")
+}
 }
