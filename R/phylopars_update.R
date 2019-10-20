@@ -46,8 +46,8 @@ anc.recon <- function(trait_data, tree, vars = FALSE, CI = FALSE)
     colnames(var) <- colnames(Yhat)
     if(CI)
     {
-      lower <- Yhat + qnorm(.975)*var
-      upper <- Yhat - qnorm(.975)*var
+      lower <- Yhat + qnorm(.975)*sqrt(var)
+      upper <- Yhat - qnorm(.975)*sqrt(var)
       rownames(lower) <- rownames(upper) <- tree$node.label
       colnames(lower) <- colnames(upper) <- colnames(Yhat)
     }
