@@ -44,7 +44,7 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   } else if(length(anc)==1) anc <- rep(anc,ntraits)
   anc <- as.double(anc)
   
-  if(missing(intraspecific)) intraspecific <- 0.1
+  if(missing(intraspecific)) if(nreps>1) intraspecific <- 0.1 else intraspecific <- 0
   if(length(intraspecific)==1)
   {
     opt <- 1
@@ -62,40 +62,54 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   anc_mat <- matrix(1,ntaxa) %*% anc
   Xall <- sim.char(phy = tree,par = v,nsim = nsim)
   colnames(Xall) <- paste("V",1:ntraits,sep="")
-  if(nreps==1 & nmissing==0 & nsim==1)
-  {
-    if(return.type=="matrix") return(list(trait_data=Xall[,,1,drop=FALSE],tree=perm_tree,sim_tree=tree,original_X=Xall[,,1,drop=FALSE])) else
-      return(list(trait_data=data.frame(species=rownames(Xall[,,1]),Xall[,,1]),tree=perm_tree,sim_tree=tree,original_X=Xall[,,1,drop=FALSE]))
-  } else if(nreps==1 & nmissing==0) 
-  {
-    if(return.type=="matrix")
-    {
-      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]]),tree=perm_tree,sim_tree=tree,original_X=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]])))
-    } else
-      return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) data.frame(species=rownames(X[[1]]),X[[1]])),tree=perm_tree,sim_tree=tree,original_X=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]])))
-  }
+  #if(nreps==1 & nmissing==0 & nsim==1)
+  #{
+  #  if(return.type=="matrix") return(list(trait_data=Xall[,,1,drop=FALSE],tree=perm_tree,sim_tree=tree,original_X=Xall[,,1,drop=FALSE])) else
+  #    return(list(trait_data=data.frame(species=rownames(Xall[,,1,drop=FALSE]),Xall[,,1]),tree=perm_tree,sim_tree=tree,original_X=Xall[,,1,drop=FALSE]))
+  #} else if(nreps==1 & nmissing==0) 
+  #{
+  #  if(return.type=="matrix")
+  #  {
+  #    return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]]),tree=perm_tree,sim_tree=tree,original_X=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]])))
+  #  } else
+  #    return(list(trait_data=lapply(apply(Xall,3,function(X) list(X)),function(X) data.frame(species=rownames(X[[1]]),X[[1]])),tree=perm_tree,sim_tree=tree,original_X=lapply(apply(Xall,3,function(X) list(X)),function(X) X[[1]])))
+  #}
   
   X <- original_X <- rep(list(matrix(0,ntaxa*nreps,ntraits)),nsim)
   for(j in 1:nsim)
   {
-    Xall[,,j] <- Xall[,,j] + anc_mat
-    if(nreps==1)
+    for(ii in 1:nrow(Xall[,,j,drop=FALSE]))
     {
-      X[[j]][1:(ntraits*ntaxa)] <- original_X[[j]][1:(ntraits*ntaxa)] <- Xall[,,j]
-    } else
-    {
-      simdat_j <- t(apply(Xall[,,j],1,function(X) mvrnorm(n = nreps,mu = X,Sigma = intraspecific)))
-      original_X[[j]] <- Xall[,,j]
-      for(jj in 1:nreps)
-      {
-        #X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- rnorm(n = ntraits*ntaxa,mean = Xall[,,j],sd = intraspecific)
-        X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- simdat_j[,1:ntraits*jj]
-        #return(X)
-      }
+      Xall[,,j] <- Xall[,,j] + anc_mat
     }
+    #Xall[,,j] <- as.matrix(Xall[,,j,drop=FALSE]) + anc_mat
+    original_X[[j]] <- Xall[,,j,drop=FALSE]
+    simdat_j <- matrix(NA,nrow = ntaxa*nreps,ncol = ntraits)
+    
+    #if(nreps==1)
+    #{
+    #  X[[j]][1:(ntraits*ntaxa)] <- original_X[[j]][1:(ntraits*ntaxa)] <- Xall[,,j]
+    #} else
+    #{
+    
+      for(ii in 1:nrow(Xall[,,j,drop=FALSE]))
+      {
+        X[[j]][(1:nreps-1)*ntaxa+ii,] <- mvrnorm(n = nreps,mu = Xall[ii,,j,drop=FALSE],Sigma = intraspecific)
+      }
+    
+      #simdat_j <- t(apply(as.matrix(Xall[,,j,drop=FALSE]),1,function(X) mvrnorm(n = nreps,mu = X,Sigma = intraspecific)))
+      #for(jj in 1:nreps)
+      #{
+        #X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- rnorm(n = ntraits*ntaxa,mean = Xall[,,j],sd = intraspecific)
+        #X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- simdat_j[,1:ntraits*jj]
+      #  X[[j]][1:ntaxa + (jj-1)*(ntaxa),] <- simdat_j[,(1:ntraits-1)*nreps+jj]
+        
+        #return(X)
+      #}
+    #}
     X[[j]][sample(1:length(X[[j]]),nmissing)] <- NA
     colnames(X[[j]]) <- paste("V",1:ncol(X[[j]]),sep = "")
-    species <- rep(rownames(Xall[,,j]),nreps)
+    species <- rep(rownames(Xall[,,j,drop=FALSE]),nreps)
     rownames(X[[j]]) <- 1:nrow(X[[j]])
     X[[j]] <- data.frame(species=species,X[[j]])
     if(nreps==1) rownames(X[[j]]) <- species
