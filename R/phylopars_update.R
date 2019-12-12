@@ -17,11 +17,11 @@ anc.recon <- function(trait_data, tree, vars = FALSE, CI = FALSE)
   {
     tree$node.label <- (length(tree$tip.label)+1):(length(tree$tip.label)+tree$Nnode)
   }
-  if(class(trait_data)=="numeric")
+  if(inherits(trait_data,"numeric"))
   {
     if(is.null(names(trait_data))) names(trait_data) <- as.character(tree$tip.label)
     trait_data <- as.matrix(trait_data)
-  } else if(class(trait_data)=="data.frame")
+  } else if(inherits(trait_data,"data.frame"))
   {
     if(any(grepl("species",colnames(trait_data),ignore.case = TRUE)))
     {
@@ -67,11 +67,11 @@ fast.SSC <- function(trait_data,tree,niter=1000)
   {
     tree$node.label <- (nspecies+1):(nspecies+tree$Nnode)
   }
-  if(class(trait_data)=="numeric")
+  if(inherits(trait_data,"numeric"))
   {
     if(is.null(names(trait_data))) names(trait_data) <- as.character(tree$tip.label)
     trait_data <- as.matrix(trait_data)
-  } else if(class(trait_data)=="data.frame")
+  } else if(inherits(trait_data,"data.frame"))
   {
     if(any(grepl("species",colnames(trait_data),ignore.case = TRUE)))
     {
@@ -398,16 +398,16 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       if(is.na(phylocov_fixed)[[1]])
       {
         if(npd) phylocov <- try(as.matrix(nearPD(phylocov)$mat),silent=TRUE)
-        if(class(phylocov)=="try-error") return(em_ll - max_delta)
+        if(inherits(phylocov,"try-error")) return(em_ll - max_delta)
         pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
-        if(class(pars)=="try-error") return(em_ll - max_delta)
+        if(inherits(pars,"try-error")) return(em_ll - max_delta)
       }
       if(is.na(phenocov_fixed)[[1]])
       {
         if(npd) phenocov <- try(as.matrix(nearPD(phenocov)$mat),silent=TRUE)
-        if(class(phenocov)=="try-error") return(em_ll - max_delta)
+        if(inherits(phenocov,"try-error")) return(em_ll - max_delta)
         if(pheno_error>0) pars <- c(pars,mat_to_pars(phenocov,nvar,pheno_error))
-        if(class(pars)=="try-error") return(em_ll - max_delta)
+        if(inherits(pars,"try-error")) return(em_ll - max_delta)
       }
       
       ll <- try(tp(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
@@ -417,7 +417,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                    ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=1,
                    is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed, is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                    is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl[[1]],silent=TRUE)
-      if(class(ll)=="try-error") ll <- em_ll-max_delta
+      if(inherits(ll,"try-error")) ll <- em_ll-max_delta
       if(is.na(ll)) ll <- em_ll - max_delta
       if(abs(abs(em_ll)-abs(ll))>max_delta) ll <- em_ll - max_delta
       if(ll==(em_ll-max_delta)) return(ll)
@@ -426,12 +426,12 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       if(is.na(phylocov_fixed)[[1]])
       {
         temp_pars <- mat_to_pars(phylocov+diag(nvar)*1e-6,nvar,as.integer(!phylo_correlated))
-        if(class(pars)=="try-error") return(em_ll - max_delta)
+        if(inherits(pars,"try-error")) return(em_ll - max_delta)
       }
       if(is.na(phenocov_fixed)[[1]])
       {
         if(pheno_error>0) temp_pars <- c(temp_pars,mat_to_pars(phenocov+diag(nvar)*1e-6,nvar,pheno_error))
-        if(class(pars)=="try-error") return(em_ll - max_delta)
+        if(inherits(pars,"try-error")) return(em_ll - max_delta)
       }
       
       temp_ll2 <- try(tp(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=edge_vec, 
@@ -443,7 +443,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                          is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())$logl[[1]],silent=TRUE)[[1]]
       
       
-      if(class(temp_ll2)!="try-error") if(!is.na(temp_ll2)) if(abs(temp_ll2-ll[[1]])>100)
+      if(!inherits(temp_ll2,"try-error")) if(!is.na(temp_ll2)) if(abs(temp_ll2-ll[[1]])>100)
       {
         ll <- em_ll-max_delta
       }
@@ -754,9 +754,9 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       {
         temp_edge_vec <- evec(par_bounds[i])
         pars <- try(estim_pars(temp_edge_vec,do_optim = FALSE),silent=TRUE)
-        if(class(pars)=="try-error")
+        if(inherits(pars,"try-error"))
           pars <- try(estim_pars(temp_edge_vec,do_optim = TRUE,skip_EM=TRUE),silent=TRUE)
-        if(class(pars)=="try-error")
+        if(inherits(pars,"try-error"))
         {
           next
         }
@@ -849,31 +849,31 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
         if(is.na(phylocov_fixed)[[1]])
         {
           if(npd) phylocov <- try(as.matrix(nearPD(phylocov)$mat),silent=TRUE)
-          if(class(phylocov)=="try-error") return(phylocov)
+          if(inherits(phylocov,"try-error")) return(phylocov)
           pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
-          if(class(pars)=="try-error") return(pars)
+          if(inherits(pars,"try-error")) return(pars)
         }
         if(pheno_error>0) if(is.na(phenocov_fixed)[[1]])
         {
           if(npd) phenocov <- try(as.matrix(nearPD(phenocov)$mat),silent=TRUE)
-          if(class(phenocov)=="try-error") return(phenocov)
+          if(inherits(phenocov,"try-error")) return(phenocov)
           pars <- c(pars,mat_to_pars(phenocov,nvar,pheno_error))
-          if(class(pars)=="try-error") return(pars)
+          if(inherits(pars,"try-error")) return(pars)
         }
         if(npd) alpha <- try(as.matrix(nearPD(alpha)$mat),silent=TRUE)
-        if(class(alpha)=="try-error") return(alpha)
+        if(inherits(alpha,"try-error")) return(alpha)
         
         #HOU <- calc_OU_heights(heights = hts,edge_mat = edge_mat,des_order = des_order,nedge = nedge,alpha = alpha,sigma = phylocov)
         #len_vec <- apply(HOU,2,function(X) convert_to_tree(heights = X,nspecies = nspecies,nedge = nedge,anc = tree$edge[,1],des = tree$edge[,2]))
         #len_vec <- lapply(apply(len_vec,1,function(X) list(matrix(X,nvar,nvar))),function(X) X[[1]])
         pars <- numeric()
         if(is.na(phylocov_fixed)[[1]]) pars <- mat_to_pars(phylocov,nvar,as.integer(!phylo_correlated))
-        if(!is.na(BM_ll)) if(class(pars)=="try-error") return(BM_ll - max_delta)
+        if(!is.na(BM_ll)) if(inherits(pars,"try-error")) return(BM_ll - max_delta)
         if(pheno_error>0) if(is.na(phenocov_fixed)[[1]]) pars <- c(pars,mat_to_pars(phenocov,nvar,pheno_error))
         if(is.na(model_par_fixed)[[1]]) pars <- c(pars,mat_to_pars(alpha,nvar,abs(full_alpha-1)))
-        if(!is.na(BM_ll)) if(class(pars)=="try-error") return(BM_ll - max_delta)
+        if(!is.na(BM_ll)) if(inherits(pars,"try-error")) return(BM_ll - max_delta)
         ea <- try(eigen(alpha),silent=TRUE)
-        if(class(ea)=="try-error") return(ea)
+        if(inherits(ea,"try-error")) return(ea)
         P <- ea$vectors
         lambda <- ea$values
         if(any(lambda<=1e-8))
@@ -916,7 +916,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
         
         temp_alpha <- alpha + diag(nvar)*1e-6
         temp_ea <- try(eigen(temp_alpha),silent=TRUE)
-        if(class(temp_ea)=="try-error") return(temp_ea)
+        if(inherits(temp_ea,"try-error")) return(temp_ea)
         temp_P <- temp_ea$vectors
         temp_lambda <- temp_ea$values
         if(any(temp_lambda<=1e-8))
@@ -1017,7 +1017,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       o <- optim(pars2,fn = function(X,BM_ll,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list)
       {
         ll <- try(OU_fun(X,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,phenocov_list,BM_ll=BM_ll),silent=TRUE)
-        if(class(ll)=="try-error") ll <- BM_ll-max_delta
+        if(inherits(ll,"try-error")) ll <- BM_ll-max_delta
         ll <- ll[[1]]
         if(is.na(ll)) ll <- BM_ll - max_delta
         if(abs(abs(BM_ll)-abs(ll[[1]]))>max_delta) ll <- BM_ll - max_delta
@@ -1042,7 +1042,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       o <- optim(pars,fn = function(X,BM_ll,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list) 
       {
         ll <- try(OU_fun(X,R=R,Rmat=Rmat,phylocov_fixed=phylocov_fixed,phenocov_fixed=phenocov_fixed,phenocov_list=phenocov_list,BM_ll=BM_ll),silent=TRUE)
-        if(class(ll)=="try-error") ll <- BM_ll-max_delta
+        if(inherits(ll,"try-error")) ll <- BM_ll-max_delta
         ll <- ll[[1]]
         if(is.na(ll)) ll <- BM_ll - max_delta
         if(abs(abs(BM_ll)-abs(ll[[1]]))>max_delta) ll <- BM_ll - max_delta
@@ -1326,7 +1326,7 @@ mat_to_pars <- function(M,nvar,diag,log_chol=TRUE,mod_chol=TRUE)
   } else
   {
     M <- try(chol(M),silent=TRUE)
-    if(class(M)=="try-error") return(M)
+    if(inherits(M,"try-error")) return(M)
     diag(M) <- if(log_chol) log(diag(M)) else diag(M)
   }
   if(diag!=1 & nvar>1)
