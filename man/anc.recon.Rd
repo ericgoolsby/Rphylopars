@@ -4,7 +4,7 @@
 Ultra-fast maximum likelihood ancestral state reconstruction
 }
 \description{
-This function performs ancestral state reconstruction using a fast algorithm based on Ho and Ane (2014). Contrary to \link[phytools]{fastAnc}, which reroots the tree at each internal node and recalculates the root state for each tree, this algorithm only requires a single tree traversal (Goolsby, In Review). This function is several hundred to several thousand times faster than the rerooting method used in \link[phytools]{fastAnc}, which is the next-fastest maximum likelihood ancestral state reconstruction method currently described (Revell 2012). As in the \link[phytools]{fastAnc} function, the variance and 95\% intervals of estimates are optionally returned.
+This function performs ancestral state reconstruction using a fast algorithm based on Ho and Ane (2014).
 }
 \usage{
 anc.recon(trait_data, tree, vars = FALSE, CI = FALSE)
@@ -27,8 +27,6 @@ Whether to return 95\% confidence intervals of the restricted maximum likelihood
 A named vector of maximum likelihood ancestral states (with names corresponding to node names if available or node numbers from the tree rearranged in postorder, as obtained by the command \code{reorder(tree,"postorder")}). If vars or CI is set to TRUE, a list is returned with these values included.
 }
 \author{
-Goolsby E.W. (In Review). "Ultra-fast ancestral state reconstruction of continuous characters: a rerooting-free maximum likelihood approach."
-
 Felsenstein, J. (1985) Phylogenies and the comparative method. American Naturalist, 125, 1-15.
 
 Ho L.S.T., Ane C. 2014. A linear-time algorithm for Gaussian and non-Gaussian trait evolution models. Syst. Biol. 63:397-408.

@@ -7,14 +7,14 @@ Phylogenetic Comparative Tools for Missing Data and Within-Species Variation
 \description{
 Tools for performing phylogenetic comparative methods for datasets with with multiple observations per species (intraspecific variation or measurement error) and/or missing data. Performs ancestral state reconstruction and missing data imputation on the estimated evolutionary model, which can be specified as Brownian Motion, Ornstein-Uhlenbeck, Early-Burst, Pagel's lambda, kappa, or delta, or a star phylogeny.
 
-Visit the \pkg{Rphylopars} wiki for tutorials at \url{http://github.com/ericgoolsby/Rphylopars/wiki}.
+Visit the \pkg{Rphylopars} wiki for tutorials at \url{https://github.com/ericgoolsby/Rphylopars/wiki}.
 }
 \details{
 \tabular{ll}{
 Package: \tab Rphylopars\cr
 Type: \tab Package\cr
-Version: \tab 0.2.12\cr
-Date: \tab 2019-12-11\cr
+Version: \tab 0.3.1\cr
+Date: \tab 2021-02-03\cr
 License: \tab GPL (>= 2)\cr
 }
 }

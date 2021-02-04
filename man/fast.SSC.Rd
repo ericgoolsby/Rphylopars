@@ -26,8 +26,6 @@ Number of iterations for hypothesis testing (default=1000).
 \item{SSC }{Total sum of squared changes (SSC)}
 }
 \references{
-Goolsby E.W. (In Review). "Ultra-fast ancestral state reconstruction of continuous characters: a rerooting-free maximum likelihood approach."
-
 Goolsby E.W. 2016. Likelihood-Based Parameter Estimation for High-Dimensional Phylogenetic Comparative Models: Overcoming the Limitations of 'Distance-Based' Methods. Systematic Biology. Accepted.
 
 Blomberg SP, Garland T, Ives AR. 2003. Testing for phylogenetic signal in comparative data: behavioral traits are more labile. Evolution, 57:717-745.
@@ -38,9 +36,6 @@ Adams, D.C. 2014. A generalized K statistic for estimating phylogenetic signal f
 }
 \author{
 Eric W. Goolsby
-}
-\seealso{
-\link[phytools]{phylosig}, \link[geomorph]{physignal}, \link[phylocurve]{fast.geomorph.physignal}
 }
 \examples{
 sim_dat <- simtraits(ntaxa = 100,ntraits = 4)
