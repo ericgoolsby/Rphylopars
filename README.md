@@ -7,7 +7,7 @@ For download information and tutorials, visit the [Rphylopars wiki](https://gith
 ### CRAN: 0.3.2
 ### GitHub:
 * master branch - 0.3.2
-* devel branch - 0.3.2
+* devel branch - 0.3.3
 
 ## Version notes
 * Version 0.3.1 and 0.3.2 - Removed broken links from fast.SSC.Rd and Rphylopars-package.Rd help files (resolves CRAN notes)
