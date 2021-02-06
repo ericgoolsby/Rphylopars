@@ -129,18 +129,54 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   tree <- reorder(tree,"postorder")
   if(model=="white" | model=="star") tree <- reorder(rescale(tree,model="lambda",lambda=0),"postorder")
   
-  
   if(is.null(tree$node.label))
   {
     tree$node.label <- (length(tree$tip.label)+1):(length(tree$tip.label)+tree$Nnode)
   }
   trait_data[,1] <- as.character(trait_data[,1])
+  
+  # prevent crashing from trailing blank columns
+  col_rm <- apply(trait_data,2,function(X) all(is.na(X)))
+  if(any(col_rm))
+  {
+    trait_data <- trait_data[,-which(col_rm)]
+  }
+  
+  # prevent crashing for blank (NA) species
+  row_rm <- apply(trait_data,1,function(X) is.na(X[[1]]))
+  if(any(row_rm))
+  {
+    trait_data <- trait_data[-which(row_rm),]
+  }
+  
+  # prevent crashing for species not in tree
+  row_rm <- apply(trait_data,1,function(X) !(X[[1]] %in% tree$tip.label))
+  if(any(row_rm))
+  {
+    trait_data <- trait_data[-which(row_rm),]
+    warning("Dropping species (",unique(trait_data[which(row_rm),1]),") from data: not found in tree.")
+  }
+  
+  # prevent crashing for NA column names
+  col_rename <- is.na(colnames(trait_data))
+  if(any(col_rename))
+  {
+    colnames(trait_data)[which(col_rename)] <- paste("V",which(col_rename)-1,sep="")
+  }
+  
+  # prevent issues from "" column names
+  col_rename <- colnames(trait_data)==""
+  if(any(col_rename))
+  {
+    colnames(trait_data)[which(col_rename)] <- paste("V",which(col_rename)-1,sep="")
+  }
+  
   f_args <- as.list(environment())
   drop_taxa <- 
     name.check(phy = tree,data.names = unique(as.character(trait_data$species)))
   if(length(drop_taxa)>1)
   {
-    if(length(drop_taxa$tree_not_data)>1)
+    if(length(drop_taxa$tree_not_data)>0)
     {
       add_data <- data.frame(species=as.character(drop_taxa$tree_not_data),
                              matrix(as.double(NA),length(drop_taxa$tree_not_data),ncol(trait_data)-1))

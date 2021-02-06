@@ -10,6 +10,7 @@ For download information and tutorials, visit the [Rphylopars wiki](https://gith
 * devel branch - 0.3.2
 
 ## Version notes
+* Vesion 0.3.3 - Prevents R from crashing when is.na(species) (e.g. trailing blank rows at the end of a spreadsheet).
 * Version 0.3.1 and 0.3.2 - Removed broken links from fast.SSC.Rd and Rphylopars-package.Rd help files (resolves CRAN notes)
 * Version 0.3.0 - R 4.0 compatibility
 * Version 0.2.11 - Fixed confidence intervals (previously too large) and installation issues
