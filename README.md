@@ -7,7 +7,7 @@ For download information and tutorials, visit the [Rphylopars wiki](https://gith
 ### CRAN: 0.3.2
 ### GitHub:
 * master branch - 0.3.2
-* devel branch - 0.3.2
+* devel branch - 0.3.3
 
 ## Version notes
 * Vesion 0.3.3 - Prevents R from crashing when is.na(species) (e.g. trailing blank rows at the end of a spreadsheet).
