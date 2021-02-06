@@ -5,16 +5,14 @@
 Phylogenetic Comparative Tools for Missing Data and Within-Species Variation
 }
 \description{
-Tools for performing phylogenetic comparative methods for datasets with with multiple observations per species (intraspecific variation or measurement error) and/or missing data. Performs ancestral state reconstruction and missing data imputation on the estimated evolutionary model, which can be specified as Brownian Motion, Ornstein-Uhlenbeck, Early-Burst, Pagel's lambda, kappa, or delta, or a star phylogeny.
-
-Visit the \pkg{Rphylopars} wiki for tutorials at \url{https://github.com/ericgoolsby/Rphylopars/wiki}.
+Tools for performing phylogenetic comparative methods for datasets with with multiple observations per species (intraspecific variation or measurement error) and/or missing data (Goolsby et al. 2017). Performs ancestral state reconstruction and missing data imputation on the estimated evolutionary model, which can be specified as Brownian Motion, Ornstein-Uhlenbeck, Early-Burst, Pagel's lambda, kappa, or delta, or a star phylogeny.
 }
 \details{
 \tabular{ll}{
 Package: \tab Rphylopars\cr
 Type: \tab Package\cr
-Version: \tab 0.3.1\cr
-Date: \tab 2021-02-03\cr
+Version: \tab 0.3.2\cr
+Date: \tab 2021-02-04\cr
 License: \tab GPL (>= 2)\cr
 }
 }
@@ -26,6 +24,8 @@ Maintainer: Eric W. Goolsby \email{eric.goolsby.evolution@gmail.com}
 }
 \references{
 Bruggeman J, Heringa J and Brandt BW. (2009) PhyloPars: estimation of missing parameter values using phylogeny. \emph{Nucleic Acids Research} 37: W179-W184.
+
+Goolsby EW, Ane C, Bruggeman J. 2017. "Rphylopars: Fast Multivariate Phylogenetic Comparative Methods for Missing Data and Within-Species Variation." Methods in Ecology & Evolution. 2017. 8:22-27.
 
 Ho, L. S. T. and Ane, C. 2014. "A linear-time algorithm for Gaussian and non-Gaussian trait evolution models". Systematic Biology 63(3):397-408.
 }
