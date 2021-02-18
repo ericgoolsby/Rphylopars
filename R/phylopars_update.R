@@ -1398,7 +1398,7 @@ print.phylopars <- function(x, ...)
     
     nvar <- ncol(PPE$pars[[1]])
     cat("\n% variance explained by phylogeny\n")
-    percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1],2,function(X) var(X,na.rm=TRUE)))*100
+    percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1,drop=FALSE],2,function(X) var(X,na.rm=TRUE)))*100
     names(percent_var) <- colnames(PPE$pars[[1]])
     print(percent_var)
     
@@ -1447,7 +1447,7 @@ summary.phylopars <- function(object, ...)
   if(length(PPE$pars)>1) {
     ret[,3] <- round(sqrt(diag(PPE$pars[[2]])),4)
     nvar <- ncol(PPE$pars[[1]])
-    percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1],2,function(X) var(X,na.rm=TRUE)))*100
+    percent_var <- (1-diag(PPE$pars[[2]])/apply(PPE$trait_data[,1:nvar+1,drop=FALSE],2,function(X) var(X,na.rm=TRUE)))*100
     names(percent_var) <- colnames(PPE$pars[[1]])
     ret[,4] <- round(percent_var,2)
   }
