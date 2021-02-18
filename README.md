@@ -7,9 +7,11 @@ For download information and tutorials, visit the [Rphylopars wiki](https://gith
 ### CRAN: 0.3.2
 ### GitHub:
 * master branch - 0.3.2
-* devel branch - 0.3.3
+* devel branch - 0.3.4
 
 ## Version notes
+* Version 0.3.4 - Fixes printing error when only one variable is included in `phylopars()`
+* Vesion 0.3.3 - Prevents R from crashing when is.na(species) (e.g. trailing blank rows at the end of a spreadsheet).
 * Version 0.3.1 and 0.3.2 - Removed broken links from fast.SSC.Rd and Rphylopars-package.Rd help files (resolves CRAN notes)
 * Version 0.3.0 - R 4.0 compatibility
 * Version 0.2.11 - Fixed confidence intervals (previously too large) and installation issues
