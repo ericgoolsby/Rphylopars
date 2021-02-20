@@ -133,8 +133,19 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   {
     tree$node.label <- (length(tree$tip.label)+1):(length(tree$tip.label)+tree$Nnode)
   }
-  trait_data[,1] <- as.character(trait_data[,1])
   
+  if(colnames(trait_data)[1]!="species")
+  {
+    stop("First column name of trait_data MUST be 'species' (all lower case).")
+  }
+  
+  trait_data[,1] <- as.character(trait_data[,1])
+  if(!all(trait_data[,1] %in% tree$tip.label))
+  {
+    mismatch <- unique(trait_data[,1])[which(!(unique(trait_data[,1]) %in% tree$tip.label))]
+    stop(paste(length(mismatch)," species name(s) in the first column of trait_data did not match any names in tree$tip.label:\n",paste(unique(trait_data[,1])[which(!(unique(trait_data[,1]) %in% tree$tip.label))],collapse="\n"),sep=""))
+  }
+
   # prevent crashing from trailing blank columns
   col_rm <- apply(trait_data,2,function(X) all(is.na(X)))
   if(any(col_rm))
@@ -1469,6 +1480,19 @@ phylopars.lm <- function()
   args <- as.list(match.call())
   args <- args[3:length(args)]
   #trait_data$species <- factor(trait_data$species, levels=tree$tip.label)
+  
+  if(colnames(trait_data)[1]!="species")
+  {
+    stop("First column name of trait_data MUST be 'species' (all lower case).")
+  }
+  
+  trait_data[,1] <- as.character(trait_data[,1])
+  if(!all(trait_data[,1] %in% tree$tip.label))
+  {
+    mismatch <- unique(trait_data[,1])[which(!(unique(trait_data[,1]) %in% tree$tip.label))]
+    stop(paste(length(mismatch)," species name(s) in the first column of trait_data did not match any names in tree$tip.label:\n",paste(unique(trait_data[,1])[which(!(unique(trait_data[,1]) %in% tree$tip.label))],collapse="\n"),sep=""))
+  }
+  
   trait_data <- trait_data[,c(which(colnames(trait_data)=="species"),which(colnames(trait_data)!="species"))]
   original_data <- trait_data
   original_option <- getOption("na.action")
