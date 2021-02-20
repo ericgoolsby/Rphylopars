@@ -5,11 +5,11 @@ For download information and tutorials, visit the [Rphylopars wiki](https://gith
 
 ## Current versions available
 ### CRAN: 0.3.2
-### GitHub:
-* master branch - 0.3.2
-* devel branch - 0.3.4
+### GitHub master branch - 0.3.2
+### GitHub devel branch - 0.3.5
 
 ## Version notes
+* Vesrion 0.3.5 - Checks that all species names in `trait_data$species` have an exact match in `tree$tip.label`
 * Version 0.3.4 - Fixes printing error when only one variable is included in `phylopars()`
 * Vesion 0.3.3 - Prevents R from crashing when is.na(species) (e.g. trailing blank rows at the end of a spreadsheet).
 * Version 0.3.1 and 0.3.2 - Removed broken links from fast.SSC.Rd and Rphylopars-package.Rd help files (resolves CRAN notes)
