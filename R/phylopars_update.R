@@ -10,6 +10,7 @@
 
 anc.recon <- function(trait_data, tree, vars = FALSE, CI = FALSE)
 {
+  trait_data <- as.data.frame(trait_data)
   tree <- tree[c("edge","tip.label","edge.length","Nnode")]
   class(tree) <- "phylo"
   tree <- reorder(tree,"postorder")
@@ -59,6 +60,8 @@ anc.recon <- function(trait_data, tree, vars = FALSE, CI = FALSE)
 
 fast.SSC <- function(trait_data,tree,niter=1000)
 {
+  trait_data <- as.data.frame(trait_data)
+  
   tree <- tree[c("edge","tip.label","edge.length","Nnode")]
   class(tree) <- "phylo"
   tree <- reorder(tree,"postorder")
@@ -124,6 +127,8 @@ print.SSC <- function(x, ...)
 
 phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE,phenocov_list=list(),ret_args=FALSE,ret_level=1,ret_tp_args=FALSE)
 {
+  trait_data <- as.data.frame(trait_data)
+  
   if(ret_tp_args)
   {
     message("Setting ret_tp_args = TRUE is experimental and may be unstable.\nPlease contact Rphylopars maintainer if interested in using,\nand/or raise an issue on GitHub in case of suspected bugs.")
@@ -1207,6 +1212,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
 
 prep_em <- function(trait_data,tree)
 {
+  trait_data <- as.data.frame(trait_data)
+  
   nvar <- ncol(trait_data)-1
   p1 <- pic.ortho(x = setNames(lapply(tree$tip.label,function(X) trait_data[as.character(trait_data$species)==X,2]),tree$tip.label),phy = multi2di(tree,random=FALSE),var.contrasts = TRUE,intra = TRUE)
   pp1 <- cbind(c(unlist(attributes(p1)$intra),p1[,1]))
@@ -1509,6 +1516,8 @@ phylopars.lm <- function()
   args <- as.list(match.call())
   args <- args[3:length(args)]
   #trait_data$species <- factor(trait_data$species, levels=tree$tip.label)
+  
+  trait_data <- as.data.frame(trait_data)
   
   if(colnames(trait_data)[1]!="species")
   {

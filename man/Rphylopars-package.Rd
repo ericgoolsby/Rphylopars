@@ -11,8 +11,8 @@ Tools for performing phylogenetic comparative methods for datasets with with mul
 \tabular{ll}{
 Package: \tab Rphylopars\cr
 Type: \tab Package\cr
-Version: \tab 0.3.6\cr
-Date: \tab 2021-02-27\cr
+Version: \tab 0.3.7\cr
+Date: \tab 2021-02-28\cr
 License: \tab GPL (>= 2)\cr
 }
 }
