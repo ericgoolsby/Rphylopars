@@ -1184,6 +1184,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     tip_var <- matrix(0,nrow(recon_ind),ncol(recon_ind))
     tip_cov <- vector("list",nrow(recon_ind))
     colnames(recon_ind) <- colnames(tip_var) <- colnames(trait_data)[1:nvar+1]
+    recon_ind <- data.frame(trait_data$species,recon_ind)
     
     for(i in 1:nrow(recon_ind))
     {
