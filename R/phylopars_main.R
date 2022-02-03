@@ -59,8 +59,8 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   {
     opt <- 3
   }
-  anc_mat <- matrix(1,ntaxa) %*% anc
-  Xall <- sim.char(phy = tree,par = v,nsim = nsim,root = rep(0,ntraits))
+  #anc_mat <- matrix(1,ntaxa) %*% anc
+  Xall <- sim.char(phy = tree,par = v,nsim = nsim,root = 0)
   colnames(Xall) <- paste("V",1:ntraits,sep="")
   #if(nreps==1 & nmissing==0 & nsim==1)
   #{
@@ -78,12 +78,13 @@ simtraits <- function(ntaxa=15,ntraits=4,nreps=1,nmissing=0,tree,v,anc,intraspec
   X <- original_X <- rep(list(matrix(0,ntaxa*nreps,ntraits)),nsim)
   for(j in 1:nsim)
   {
-    for(ii in 1:nrow(Xall[,,j,drop=FALSE]))
-    {
-      Xall[,,j] <- Xall[,,j] + anc_mat
-    }
+    #for(ii in 1:nrow(Xall[,,j,drop=FALSE]))
+    #{
+    #  Xall[,,j] <- Xall[,,j] + anc_mat
+    #}
     #Xall[,,j] <- as.matrix(Xall[,,j,drop=FALSE]) + anc_mat
-    X[[j]] <- original_X[[j]] <- Xall[,,j,drop=FALSE]
+    Xall[,,j] <- scale(Xall[,,j],-anc,FALSE)
+    original_X[[j]] <- Xall[,,j,drop=FALSE]
     simdat_j <- matrix(NA,nrow = ntaxa*nreps,ncol = ntraits)
     
     #if(nreps==1)
