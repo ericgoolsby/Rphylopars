@@ -1177,6 +1177,31 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   
   
   ret_list <- list(logLik=logLik,pars=pars,model=model,mu=anc_recon[nspecies+1,],npars=npars,anc_recon=anc_recon,anc_var=anc_var,anc_cov=anc_cov,tree=tree,trait_data=trait_data,REML=REML)
+  
+  if(pheno_error!=0)
+  {
+    recon_ind <- ll2$ll2$recon_ind
+    tip_var <- matrix(0,nrow(recon_ind),ncol(recon_ind))
+    tip_cov <- vector("list",nrow(recon_ind))
+    colnames(recon_ind) <- colnames(tip_var) <- colnames(trait_data)[1:nvar+1]
+    
+    for(i in 1:nrow(recon_ind))
+    {
+      #tip_cov[[i]] <- ll2$ll2$tip_uncertainty[1:nvar+(i-1)*nvar,,drop=FALSE]
+      #dimnames(tip_cov[[i]]) <- list(colnames(trait_data)[1:nvar+1],colnames(trait_data)[1:nvar+1])
+      #tip_var[i,] <- as.matrix(diag(tip_cov[[i]]))
+    }
+    #rownames(tip_var) <- rownames(recon_ind) <- names(tip_cov) <- 1:length(tip_cov)
+    #rownames(tip_var)[1:nspecies] <- rownames(recon_ind)[1:nspecies] <- names(tip_cov)[1:nspecies] <- tree$tip.label
+    #rownames(tip_var)[(nspecies+1):nrow(tip_var)] <- rownames(recon_ind)[(nspecies+1):nrow(tip_var)] <- names(tip_cov)[(nspecies+1):nrow(tip_var)] <- 
+    #  tree$node.label #(nspecies+1):nrow(tip_var)
+    ret_list$ind_recon <- recon_ind
+    #ret_list$tip_var <- tip_var
+    #ret_list$tip_cov <- tip_cov
+  }
+  
+  
+
   if(ret_tp_args)
   {
     ret_list$tp_args = ll2$tp_args
