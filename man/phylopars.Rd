@@ -10,7 +10,7 @@ skip_optim = FALSE, skip_EM = FALSE, EM_Fels_limit = 1000, repeat_optim_limit = 
 EM_missing_limit = 50, repeat_optim_tol = 0.01, model_par_evals = 10, max_delta = 10000,
 EM_verbose = FALSE, optim_verbose = FALSE, npd = FALSE,
 nested_optim = FALSE, usezscores = TRUE, phenocov_list = list(), ret_args = FALSE,
-ret_level = 1, ret_tp_args = FALSE)
+ret_level = 1, get_cov_CIs = FALSE)
 }
 \arguments{
   \item{trait_data}{A data frame with the first column labeled "species" (with species names matching tips on the phylogeny) and one column per trait. Each row corresponds to a single observation, and multiple observations for species are allowed. Missing data should be represented with NA.}
@@ -43,7 +43,7 @@ ret_level = 1, ret_tp_args = FALSE)
   \item{phenocov_list}{An optional named list of species-specific within-species covariance matrices to be held fixed, as in Ives et al (2007). This option forces pheno_error and pheno_correlated to be FALSE, and uses mean species values instead of raw data. Raw variance should be divided by the number of observations per species (i.e., squared standard errors). See Ives et al (2007) for more details.}
   \item{ret_args}{For internal use only.}
   \item{ret_level}{For internal use only.}
-  \item{ret_tp_args}{For internal use only.}
+  \item{get_cov_CIs}{Whether to return 95-percent confidence intervals of covariance parameters (default=FALSE).}
 }
 \value{
   An object of class \code{phylopars}. For models with phenotypic (within-species) covariance, the estimated percentage of variance explained by the phylogeny is provided as 100*(1 - phenotypic_variance/raw_variance), where raw_variance is the variance of all observations for a given trait across species (\code{var(PPE$trait_data[,2:ncol(PPE$trait_data)],na.rm=TRUE)}).
