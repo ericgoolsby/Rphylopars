@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // C_anc_recon
 List C_anc_recon(arma::mat Y, arma::vec anc, arma::vec des, arma::vec edge_vec, int nedge, int nvar, int nspecies);
 RcppExport SEXP _Rphylopars_C_anc_recon(SEXP YSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP edge_vecSEXP, SEXP nedgeSEXP, SEXP nvarSEXP, SEXP nspeciesSEXP) {

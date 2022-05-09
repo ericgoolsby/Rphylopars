@@ -11,7 +11,7 @@ skip_EM = FALSE, EM_Fels_limit = 1000, repeat_optim_limit = 1,
 EM_missing_limit = 50,repeat_optim_tol = 0.01, model_par_evals = 10,
 max_delta = 10000, EM_verbose = FALSE,optim_verbose = FALSE, npd = FALSE,
 nested_optim = FALSE, usezscores = TRUE, phenocov_list = list(),
-ret_args = FALSE, ret_level = 1, ret_tp_args = FALSE)
+ret_args = FALSE, ret_level = 1, get_cov_CIs = FALSE)
 }
 \arguments{
   \item{formula}{Model formula -- e.g. Y~X1+X2}
@@ -45,7 +45,7 @@ ret_args = FALSE, ret_level = 1, ret_tp_args = FALSE)
   \item{phenocov_list}{An optional named list of species-specific within-species covariance matrices to be held fixed, as in Ives et al (2007). This option forces pheno_error and pheno_correlated to be FALSE, and uses mean species values instead of raw data. Raw variance should be divided by the number of observations per species (i.e., squared standard errors). See Ives et al (2007) for more details.}
   \item{ret_args}{For internal use only.}
   \item{ret_level}{For internal use only.}
-  \item{ret_tp_args}{For internal use only.}
+  \item{get_cov_CIs}{Whether to return 95-percent confidence intervals of covariance parameters (default=FALSE).}
 }
 \value{
 A fitted phylopars.lm object.

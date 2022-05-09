@@ -125,18 +125,13 @@ print.SSC <- function(x, ...)
 }
 
 
-phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE,phenocov_list=list(),ret_args=FALSE,ret_level=1,ret_tp_args=FALSE)
+phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE,phenocov_list=list(),ret_args=FALSE,ret_level=1,get_cov_CIs = FALSE)
 {
   trait_data <- as.data.frame(trait_data)
-  
-  if(ret_tp_args)
-  {
-    message("Setting ret_tp_args = TRUE is experimental and may be unstable.\nPlease contact Rphylopars maintainer if interested in using,\nand/or raise an issue on GitHub in case of suspected bugs.")
-  }
   tree <- tree[c("edge","tip.label","edge.length","Nnode")]
   class(tree) <- "phylo"
   tree <- reorder(tree,"postorder")
-  if(model=="white" | model=="star") tree <- reorder(rescale(tree,model="lambda",lambda=0),"postorder")
+  if(model=="white" | model=="star") tree <- reorder(transf.branch.lengths(phy = tree,model = "lambda",parameters=list(lambda=0))$tree,"postorder")
   
   if(is.null(tree$node.label))
   {
@@ -191,6 +186,31 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     colnames(trait_data)[which(col_rename)] <- paste("V",which(col_rename)-1,sep="")
   }
   
+  # Copied from geiger package, which is set to be archived on CRAN on May 9, 2022
+  name.check <- function (phy, data, data.names = NULL) 
+  {
+    if (is.null(data.names)) {
+      if (is.vector(data)) {
+        data.names <- names(data)
+      }
+      else {
+        data.names <- rownames(data)
+      }
+    }
+    t <- phy$tip.label
+    r1 <- t[is.na(match(t, data.names))]
+    r2 <- data.names[is.na(match(data.names, t))]
+    r <- list(sort(r1), sort(r2))
+    names(r) <- cbind("tree_not_data", "data_not_tree")
+    class(r) <- "name.check"
+    if (length(r1) == 0 && length(r2) == 0) {
+      return("OK")
+    }
+    else {
+      return(r)
+    }
+  }
+  
   f_args <- as.list(environment())
   drop_taxa <- 
     name.check(phy = tree,data.names = unique(as.character(trait_data$species)))
@@ -235,11 +255,11 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   evec <- function(bounds)
   {
     if((model=="OU" & bounds==0) | (model=="EB" & bounds==0) | (model=="lambda" & bounds==1) | (model=="delta" & bounds==1) | (model=="kappa" & bounds==1)) return(edge_vec)
-    if(model=="OU") edge_vec <- c(reorder(rescale(tree,model="OU",alpha=bounds),"postorder")$edge.length,0)
-    if(model=="EB") edge_vec <- c(reorder(rescale(tree,model="EB",a=bounds),"postorder")$edge.length,0)
-    if(model=="lambda") edge_vec <- c(reorder(rescale(tree,model="lambda",lambda=bounds),"postorder")$edge.length,0)
-    if(model=="kappa") edge_vec <- c(reorder(rescale(tree,model="kappa",kappa=bounds),"postorder")$edge.length,0)
-    if(model=="delta") edge_vec <- c(reorder(rescale(tree,model="delta",delta=bounds),"postorder")$edge.length,0)
+    if(model=="OU") edge_vec <- c(reorder(transf.branch.lengths(phy = tree,model = "OUfixedRoot",parameters=list(alpha=bounds))$tree,"postorder")$edge.length,0)
+    if(model=="EB") edge_vec <- c(reorder(transf.branch.lengths(phy = tree,model = "EB",parameters=list(rate=bounds))$tree,"postorder")$edge.length,0)
+    if(model=="lambda") edge_vec <- c(reorder(transf.branch.lengths(phy = tree,model = "lambda",parameters=list(lambda=bounds))$tree,"postorder")$edge.length,0)
+    if(model=="kappa") edge_vec <- c(reorder(transf.branch.lengths(phy = tree,model = "kappa",parameters=list(kappa=bounds))$tree,"postorder")$edge.length,0)
+    if(model=="delta") edge_vec <- c(reorder(transf.branch.lengths(phy = tree,model = "delta",parameters=list(delta=bounds))$tree,"postorder")$edge.length,0)
     edge_vec
   }
   
@@ -763,16 +783,14 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
                 is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
     }
     ret <- list(ll=ll2$logl,phylocov=phylocov,phenocov=phenocov,mu=ll2[[2]],pars=pars,ll2=ll2)
-    if(ret_tp_args) 
-    {
-      ret$tp_args = list(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=tedge_vec, 
+    ret$threepoint_calc = list(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=tedge_vec, 
                                edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars, nvar=nvar, 
                                phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                                species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                                ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,
                                is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                                is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
-    }
+    
     if(!nested_optim & (model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta"))
     {
       ret[model] <- ((max(par_bounds) - min(par_bounds)) / (1+exp(-(MOD_PAR)))) + min(par_bounds)
@@ -891,16 +909,14 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     
     if((model=="OU" & round(model_par-0,6)==0) | (model=="EB" & round(model_par-0,6)==0) | (model=="lambda" & round(model_par-1,6)==0) | (model=="delta" & round(model_par-1,6)==0) | (model=="kappa" & round(model_par-1,6)==0)) warning(paste("Estimated",model,"parameter is at bounds and is indistinguishable from a Brownian Motion model."))
     ret <- list(ll=ll2$logl,phylocov=phylocov,phenocov=phenocov,mu=ll2[[2]],pars=pars,ll2=ll2)
-    if(ret_tp_args)
-    {
-      ret$tp_args <- list(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=evec(model_par), 
+    ret$threepoint_calc <- list(L=X, R=R, Rmat = as.matrix(Rmat),mL=ncol(X), mR=1, pheno_error=pheno_error, edge_vec=evec(model_par), 
                           edge_ind=edge_ind,ind_edge=ind_edge, parent_edges = parent_edges,pars=pars$pars, nvar=nvar, 
                           phylocov_diag=as.integer(!phylo_correlated), nind=nind, nob=nob, nspecies=nspecies, nedge=nedge, anc=anc, des=des, REML=as.integer(REML), 
                           species_subset=species_subset, un_species_subset = un_species_subset,subset_list=subset_list,
                           ind_list=ind_list, tip_combn=tip_combn,is_edge_ind=is_edge_ind,fixed_mu=matrix(0),ret_level=3,
                           is_phylocov_fixed=as.integer(!is.na(phylocov_fixed)[[1]]),phylocov_fixed=phylocov_fixed,is_phenocov_list=length(phenocov_list),phenocov_list=phenocov_list,
                           is_phenocov_fixed=as.integer(!is.na(phenocov_fixed)[[1]]),phenocov_fixed=phenocov_fixed,OU_len=list())
-    }
+    
     if(model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta")
     {
       ret[model] <- ((max(par_bounds) - min(par_bounds)) / (1+exp(-(model_par)))) + min(par_bounds)
@@ -1201,12 +1217,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     #ret_list$tip_cov <- tip_cov
   }
   
-  
-
-  if(ret_tp_args)
-  {
-    ret_list$tp_args = ll2$tp_args
-  }
+  ret_list$threepoint_calc = ll2$threepoint_calc
                    
   if(model[[1]]=="mvOU" | model[[1]]=="OU")
   {
@@ -1231,6 +1242,7 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   
   
   class(ret_list) <- "phylopars"
+  if(get_cov_CIs) ret_list$cov_CIs <- get_cov_CIs(ret_list)
   #g <- grad(f,pars2[[1]],em_ll=z_em_ll[[1]],R=R,Rmat=Rmat)
   #pars_to_mat(g[phylocov_pars],nvar,as.integer(!phylo_correlated))
   ret_list
@@ -1798,13 +1810,10 @@ ll_wrapper <- function(pars,args)
 
 get_cov_CIs <- function(p,lower=.025,upper=.975,nsim=5000,verbose=TRUE)
 {
-  if(is.null(p$tp_args)) stop("Please re-run phylopars with ret_tp_args = TRUE to use this function.")
-  message("This function is experimental and may be unstable.\nPlease contact Rphylopars maintainer if interested in using,\nand/or raise an issue on GitHub in case of suspected bugs.")
-  
-  args <- p$tp_args
-  h <- hessian(ll_wrapper,p$tp_args$pars,args = args)
-  m <- mvrnorm(n = nsim,mu = p$tp_args$pars,Sigma = solve(-h))
-  nvar <- p$tp_args$nvar
+  args <- p$threepoint_calc
+  h <- hessian(ll_wrapper,p$threepoint_calc$pars,args = args)
+  m <- mvrnorm(n = nsim,mu = p$threepoint_calc$pars,Sigma = solve(-h))
+  nvar <- p$threepoint_calc$nvar
   ret_list1 <- list(NULL)
   ret_list2 <- list(NULL)
   all_mats <- lower_CI <- upper_CI <- vector("list",length = length(p$pars))
@@ -1812,13 +1821,13 @@ get_cov_CIs <- function(p,lower=.025,upper=.975,nsim=5000,verbose=TRUE)
   {
     if(i==1)
     {
-      if(!is.na(p$tp_args$phylocov_fixed)[[1]])
+      if(!is.na(p$threepoint_calc$phylocov_fixed)[[1]])
       {
         phylocov_pars <- numeric()
       } else
       {
-        phylocov_pars <- 1:length(which(upper.tri(matrix(NA,nvar,nvar),diag = 1 - p$tp_args$phylocov_diag)))
-        all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X,nvar = nvar,diag=p$tp_args$phylocov_diag)))
+        phylocov_pars <- 1:length(which(upper.tri(matrix(NA,nvar,nvar),diag = 1 - p$threepoint_calc$phylocov_diag)))
+        all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X,nvar = nvar,diag=p$threepoint_calc$phylocov_diag)))
         
         bad_mats <- which(apply(all_mats[[i]],1,function(X) any(is.na(X) | !is.finite(X))))
         if(length(bad_mats)>0)
@@ -1827,8 +1836,8 @@ get_cov_CIs <- function(p,lower=.025,upper=.975,nsim=5000,verbose=TRUE)
         }
         while(length(bad_mats)>0)
         {
-          m[which(apply(all_mats[[i]],1,function(X) any(is.na(X)  | !is.finite(X)))),] <- mvrnorm(n = length(bad_mats),mu = p$tp_args$pars,Sigma = solve(-h))
-          all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X,nvar = nvar,diag=p$tp_args$phylocov_diag)))
+          m[which(apply(all_mats[[i]],1,function(X) any(is.na(X)  | !is.finite(X)))),] <- mvrnorm(n = length(bad_mats),mu = p$threepoint_calc$pars,Sigma = solve(-h))
+          all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X,nvar = nvar,diag=p$threepoint_calc$phylocov_diag)))
           bad_mats <- which(apply(all_mats[[i]],1,function(X) any(is.na(X)  | !is.finite(X))))
         }
       }
@@ -1839,12 +1848,12 @@ get_cov_CIs <- function(p,lower=.025,upper=.975,nsim=5000,verbose=TRUE)
       
     } else if(i==2)
     {
-      #if(!is.na(p$tp_args$phenocov_fixed)[[1]]) next
-      #if(p$tp_args$pheno_error>0) if(is.na(p$tp_args$phenocov_fixed)[[1]]) phenocov <- pars_to_mat(pars = p$tp_args$pars[phenocov_pars],nvar,p$tp_args$pheno_error) else phenocov <- phenocov_fixed
+      #if(!is.na(p$threepoint_calc$phenocov_fixed)[[1]]) next
+      #if(p$threepoint_calc$pheno_error>0) if(is.na(p$threepoint_calc$phenocov_fixed)[[1]]) phenocov <- pars_to_mat(pars = p$threepoint_calc$pars[phenocov_pars],nvar,p$threepoint_calc$pheno_error) else phenocov <- phenocov_fixed
       
-      all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X,nvar = nvar,diag=p$tp_args$pheno_error)))
+      all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X,nvar = nvar,diag=p$threepoint_calc$pheno_error)))
       
-      if(!is.na(p$tp_args$phenocov_fixed)[[1]])# | length(p$tp_args$phenocov_list)!=0)
+      if(!is.na(p$threepoint_calc$phenocov_fixed)[[1]])# | length(p$threepoint_calc$phenocov_list)!=0)
       {
         phenocov_pars <- numeric()
       } else
@@ -1856,7 +1865,7 @@ get_cov_CIs <- function(p,lower=.025,upper=.975,nsim=5000,verbose=TRUE)
         {
           phenocov_pars <- (1:ncol(h))[-phylocov_pars]
         }
-        all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X[phenocov_pars],nvar = nvar,diag=p$tp_args$pheno_error)))
+        all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X[phenocov_pars],nvar = nvar,diag=p$threepoint_calc$pheno_error)))
         
         bad_mats <- which(apply(all_mats[[i]],1,function(X) any(is.na(X)  | !is.finite(X))))
         if(length(bad_mats)>0)
@@ -1865,8 +1874,8 @@ get_cov_CIs <- function(p,lower=.025,upper=.975,nsim=5000,verbose=TRUE)
         }
         while(length(bad_mats)>0)
         {
-          m[which(apply(all_mats[[i]],1,function(X) any(is.na(X)  | !is.finite(X)))),] <- mvrnorm(n = length(bad_mats),mu = p$tp_args$pars,Sigma = solve(-h))
-          all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X[phenocov_pars],nvar = nvar,diag=p$tp_args$pheno_error)))
+          m[which(apply(all_mats[[i]],1,function(X) any(is.na(X)  | !is.finite(X)))),] <- mvrnorm(n = length(bad_mats),mu = p$threepoint_calc$pars,Sigma = solve(-h))
+          all_mats[[i]] <- t(apply(m,1,function(X) pars_to_mat(pars = X[phenocov_pars],nvar = nvar,diag=p$threepoint_calc$pheno_error)))
           bad_mats <- which(apply(all_mats[[i]],1,function(X) any(is.na(X)  | !is.finite(X))))
         }
       }
