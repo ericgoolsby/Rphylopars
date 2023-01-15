@@ -122,7 +122,7 @@ arma::mat try_inv(arma::mat M,int nvar)
   try
   {
     std::ostream nullstream(0);
-    arma::set_cerr_stream(nullstream);
+    arma::arma_cerr_stream<char>(&nullstream);
     //Minv = pinv(M);
     //M = try_clip(M,nvar,1);
     Minv = inv(M); //Minv = inv(M,"std");
@@ -141,7 +141,7 @@ arma::mat try_solve(arma::mat M,arma::mat V)
   try
   {
     std::ostream nullstream(0);
-    arma::set_cerr_stream(nullstream);
+    arma::arma_cerr_stream<char>(&nullstream);
     //M = try_clip(M,nvar,1);
     Msolve = solve(M,V); //Msolve = solve(M,V,"std");
     //Msolve = pinv(M)*V;
@@ -176,7 +176,7 @@ double logdet(arma::mat A)
   try
   {
     std::ostream nullstream(0);
-    arma::set_cerr_stream(nullstream);
+    arma::arma_cerr_stream<char>(&nullstream);
     log_det(val,sign,A);
     return val;
   }
