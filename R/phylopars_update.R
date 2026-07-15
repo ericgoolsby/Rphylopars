@@ -212,7 +212,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
   }
   
   f_args <- as.list(environment())
-  drop_taxa <- 
+  f_args <- f_args[names(f_args) %in% names(formals(phylopars))]
+  drop_taxa <-
     name.check(phy = tree,data.names = unique(as.character(trait_data$species)))
   if(length(drop_taxa)>1)
   {
