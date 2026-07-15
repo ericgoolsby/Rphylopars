@@ -5,8 +5,7 @@ For download information and tutorials, visit the [Rphylopars wiki](https://gith
 
 ## Current versions available
 ### CRAN: 0.3.9
-### GitHub master branch - 0.3.9
-### GitHub devel branch - 0.3.10
+### GitHub master branch - 0.3.10
 
 ## Version notes
 * Version 0.3.10 - Fixes issue with `model = "mvOU"` that caused an error in an internal function.
