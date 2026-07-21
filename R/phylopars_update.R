@@ -128,6 +128,19 @@ print.SSC <- function(x, ...)
 phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TRUE,pheno_correlated=TRUE,REML=TRUE,full_alpha=TRUE,phylocov_start,phenocov_start,model_par_start,phylocov_fixed,phenocov_fixed,model_par_fixed,skip_optim=FALSE,skip_EM=FALSE,EM_Fels_limit=1e3,repeat_optim_limit=1,EM_missing_limit=50,repeat_optim_tol = 1e-2,model_par_evals=10,max_delta=1e4,EM_verbose=FALSE,optim_verbose=FALSE,npd=FALSE,nested_optim=FALSE,usezscores=TRUE,phenocov_list=list(),ret_args=FALSE,ret_level=1,get_cov_CIs = FALSE)
 {
   trait_data <- as.data.frame(trait_data)
+
+  # ---- undocumented developer options (see pars_from_cov / src for details) ----
+  # armadillo_warnings: show Armadillo singular-matrix warnings on stderr (default off)
+  # legacy_solve:       use the old slow approximate solve() on singular systems (default off = fail fast)
+  # phylopars_repair_optim: let the OPTIMIZER evaluate non-PD points at nearest-PD
+  #                     instead of rejecting them (default off = historical convergence)
+  set_Rphylopars_opts(isTRUE(getOption("armadillo_warnings")),isTRUE(getOption("legacy_solve")))
+  REPAIR_OPTIM <- isTRUE(getOption("phylopars_repair_optim"))
+  # Shadow mat_to_pars so result-building sites always get valid (PD-repaired) params
+  # and never pass a "try-error" character into compiled code. The optimizer objectives
+  # (f, OU_fun) install their own shadow below that honours REPAIR_OPTIM.
+  mat_to_pars <- function(M,nvar,diag,log_chol=TRUE,mod_chol=TRUE) pars_from_cov(M,nvar,diag,log_chol,mod_chol,repair=TRUE)
+
   tree <- tree[c("edge","tip.label","edge.length","Nnode")]
   class(tree) <- "phylo"
   tree <- reorder(tree,"postorder")
@@ -464,6 +477,8 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
     # if the difference between the EM log-likelihood and the current log-likelihood is extremely high, reject (likely numerical precision issues)
     f <- function(pars,em_ll,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list)
     {
+      # optimizer objective: non-PD handling follows phylopars_repair_optim (default = reject)
+      mat_to_pars <- function(M,nvar,diag,log_chol=TRUE,mod_chol=TRUE) pars_from_cov(M,nvar,diag,log_chol,mod_chol,repair=REPAIR_OPTIM)
       if(!nested_optim & (model=="lambda" | model=="OU" | model=="EB" | model=="kappa" | model=="delta"))
       {
         edge_vec <- evec(((max(par_bounds) - min(par_bounds)) / (1+exp(-(pars[length(pars)])))) + min(par_bounds))
@@ -935,6 +950,11 @@ phylopars <- function(trait_data,tree,model="BM",pheno_error,phylo_correlated=TR
       
       OU_fun <- function(pars,R,Rmat,phylocov_fixed,phenocov_fixed,phenocov_list,ret_level=1,BM_ll=NA)
       {
+        # OU_fun is both the optimizer objective (ret_level==1) and the final result
+        # computation (ret_level>1). During optimization non-PD handling follows
+        # phylopars_repair_optim (default = reject); result calls always repair so a
+        # non-PD final estimate can't crash the unwrapped ret_level=3 calls.
+        mat_to_pars <- function(M,nvar,diag,log_chol=TRUE,mod_chol=TRUE) pars_from_cov(M,nvar,diag,log_chol,mod_chol,repair=REPAIR_OPTIM || ret_level>1)
         if(is.na(phylocov_fixed)[[1]]) phylocov <- pars_to_mat(pars[phylocov_pars],nvar,as.integer(!phylo_correlated)) else phylocov <- phylocov_fixed
         if(pheno_error>0) if(is.na(phenocov_fixed)[[1]]) phenocov <- pars_to_mat(pars[phenocov_pars],nvar,pheno_error) else phenocov <- phenocov_fixed
         if(is.na(model_par_fixed)[[1]]) alpha <- pars_to_mat(pars[alpha_pars],nvar,diag = abs(full_alpha-1))
@@ -1458,7 +1478,7 @@ mat_to_pars <- function(M,nvar,diag,log_chol=TRUE,mod_chol=TRUE)
   
   vec_count = 1
   ret <- numeric(len)
-  
+
   for(j in 1:nvar)
   {
     for(i in 1:j)
@@ -1468,6 +1488,32 @@ mat_to_pars <- function(M,nvar,diag,log_chol=TRUE,mod_chol=TRUE)
     }
   }
   ret
+}
+
+# mat_to_pars() returns a "try-error" (a character object) when chol(M) fails on a
+# non-positive-definite matrix. Passing that to the compiled tp()/calc_OU_len()
+# (which expect an arma::vec of doubles) throws
+#   "Not compatible with requested type: [type=character; target=double]".
+# pars_from_cov() is a drop-in wrapper: with repair=TRUE it projects a non-PD M to
+# the nearest PD matrix (nearPD, falling back to a diagonal ridge) and retries, so
+# it never returns a character. With repair=FALSE it is identical to mat_to_pars().
+# On the happy path (chol succeeds) the output is bit-identical either way.
+pars_from_cov <- function(M,nvar,diag,log_chol=TRUE,mod_chol=TRUE,repair=FALSE)
+{
+  p <- mat_to_pars(M,nvar,diag,log_chol,mod_chol)
+  if(repair && inherits(p,"try-error"))
+  {
+    Mpd <- try(as.matrix(nearPD(M)$mat),silent=TRUE)
+    if(inherits(Mpd,"try-error"))
+    {
+      ev <- try(min(Re(eigen(M,symmetric=TRUE,only.values=TRUE)$values)),silent=TRUE)
+      ridge <- if(inherits(ev,"try-error")) 1e-6 else max(1e-8,-ev+1e-8)
+      Mpd <- M + diag(nvar)*ridge
+    }
+    p <- mat_to_pars(Mpd,nvar,diag,log_chol,mod_chol)
+    if(inherits(p,"try-error")) p <- mat_to_pars(diag(nvar),nvar,diag,log_chol,mod_chol) # last resort
+  }
+  p
 }
 
 print.phylopars <- function(x, ...)

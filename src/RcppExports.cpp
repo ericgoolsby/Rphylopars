@@ -11,6 +11,17 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// set_Rphylopars_opts
+void set_Rphylopars_opts(bool arma_warnings, bool legacy_solve);
+RcppExport SEXP _Rphylopars_set_Rphylopars_opts(SEXP arma_warningsSEXP, SEXP legacy_solveSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< bool >::type arma_warnings(arma_warningsSEXP);
+    Rcpp::traits::input_parameter< bool >::type legacy_solve(legacy_solveSEXP);
+    set_Rphylopars_opts(arma_warnings, legacy_solve);
+    return R_NilValue;
+END_RCPP
+}
 // C_anc_recon
 List C_anc_recon(arma::mat Y, arma::vec anc, arma::vec des, arma::vec edge_vec, int nedge, int nvar, int nspecies);
 RcppExport SEXP _Rphylopars_C_anc_recon(SEXP YSEXP, SEXP ancSEXP, SEXP desSEXP, SEXP edge_vecSEXP, SEXP nedgeSEXP, SEXP nvarSEXP, SEXP nspeciesSEXP) {
@@ -192,6 +203,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_Rphylopars_set_Rphylopars_opts", (DL_FUNC) &_Rphylopars_set_Rphylopars_opts, 2},
     {"_Rphylopars_C_anc_recon", (DL_FUNC) &_Rphylopars_C_anc_recon, 7},
     {"_Rphylopars_C_anc_recon_rates", (DL_FUNC) &_Rphylopars_C_anc_recon_rates, 8},
     {"_Rphylopars_try_inv", (DL_FUNC) &_Rphylopars_try_inv, 2},

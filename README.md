@@ -8,6 +8,7 @@ For download information and tutorials, visit the [Rphylopars wiki](https://gith
 ### GitHub master branch - 0.3.10
 
 ## Version notes
+* Version 0.3.11 - Fixes issue with singular matrices when inverses fail.
 * Version 0.3.10 - Fixes issue with `model = "mvOU"` that caused an error in an internal function.
 * Version 0.3.9 - Added `get_cov_CIs` as option to `phylopars` to estimate 95% confidence intervals for trait covariance parameters. Clean up `write.phylopars()` function Also removed dependency on geiger, which is set to be archived on CRAN.
 * Version 0.3.8 - Fixes `sim.traits()` error which previously set root value to 1.

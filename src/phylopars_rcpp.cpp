@@ -1,7 +1,58 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+#include <iostream>
+#include <streambuf>
 
 using namespace Rcpp;
+
+// ---- runtime-toggllable numerical options, set from R via set_Rphylopars_opts() ----
+// Defaults preserve the historical behaviour EXCEPT that stderr warnings are muted
+// (Armadillo 15.x routes warnings to std::cerr; arma::set_cerr_stream() is now a no-op).
+static bool g_arma_warnings = false;  // false => Armadillo/std::cerr warnings silenced
+static bool g_legacy_solve  = false;  // false => solve() fails fast instead of slow approx
+
+// [[Rcpp::export]]
+void set_Rphylopars_opts(bool arma_warnings, bool legacy_solve)
+{
+  g_arma_warnings = arma_warnings;
+  g_legacy_solve  = legacy_solve;
+}
+
+namespace {
+// a streambuf that discards everything written to it
+struct NullBuffer : std::streambuf
+{
+  int overflow(int c) { return c; }
+};
+NullBuffer g_null_buffer;
+
+// RAII guard: redirect the Armadillo warning stream to a null sink for the lifetime
+// of the guard, unless the user has enabled armadillo_warnings. RcppArmadillo defines
+// ARMA_CERR_STREAM as Rcpp::Rcerr (which forwards to R's REprintf), so that is the
+// stream we must mute; std::cerr is muted too for belt-and-suspenders.
+struct CerrSilencer
+{
+  std::streambuf* prev_std;
+  std::streambuf* prev_R;
+  bool active;
+  CerrSilencer() : prev_std(0), prev_R(0), active(!g_arma_warnings)
+  {
+    if(active)
+    {
+      prev_std = std::cerr.rdbuf(&g_null_buffer);
+      prev_R   = Rcpp::Rcerr.rdbuf(&g_null_buffer);
+    }
+  }
+  ~CerrSilencer()
+  {
+    if(active)
+    {
+      std::cerr.rdbuf(prev_std);
+      Rcpp::Rcerr.rdbuf(prev_R);
+    }
+  }
+};
+} // anonymous namespace
 
 // [[Rcpp::export]]
 List C_anc_recon(arma::mat Y,arma::vec anc,arma::vec des,arma::vec edge_vec,int nedge,int nvar,int nspecies)
@@ -121,8 +172,7 @@ arma::mat try_inv(arma::mat M,int nvar)
   arma::mat Minv;
   try
   {
-    std::ostream nullstream(0);
-    arma::set_cerr_stream(nullstream);
+    CerrSilencer arma_cerr_silencer;
     //Minv = pinv(M);
     //M = try_clip(M,nvar,1);
     Minv = inv(M); //Minv = inv(M,"std");
@@ -140,10 +190,12 @@ arma::mat try_solve(arma::mat M,arma::mat V)
   arma::mat Msolve;
   try
   {
-    std::ostream nullstream(0);
-    arma::set_cerr_stream(nullstream);
+    CerrSilencer arma_cerr_silencer;
     //M = try_clip(M,nvar,1);
-    Msolve = solve(M,V); //Msolve = solve(M,V,"std");
+    // no_approx => a rank-deficient/singular system throws immediately (fast) and
+    // is caught below, instead of Armadillo grinding out a slow approximate solve.
+    if(g_legacy_solve) Msolve = solve(M,V);
+    else               Msolve = solve(M,V,arma::solve_opts::no_approx);
     //Msolve = pinv(M)*V;
     return Msolve;
   }
@@ -175,8 +227,7 @@ double logdet(arma::mat A)
   double sign = 1;
   try
   {
-    std::ostream nullstream(0);
-    arma::set_cerr_stream(nullstream);
+    CerrSilencer arma_cerr_silencer;
     log_det(val,sign,A);
     return val;
   }
